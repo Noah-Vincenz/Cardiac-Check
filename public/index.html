@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ECG</title>
+  <!-- <link rel="stylesheet" type="text/css" href="main.css" /> -->
+  <style>
+      table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+          width: 100%;
+      }
+
+      td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+      }
+
+      tr:nth-child(even) {
+          background-color: #dddddd;
+      }
+  </style>
+</head>
+<body>
+<!-- for firebase database -->
+<pre id="object">
+
+</pre>
+<div id="topContainer">
+    <p>
+        <B>Select a patient:</B> <BR>
+        <select id="selectedItem" onchange="getSelectedUser()" NAME="Patient">
+        <option SELECTED> Thomas Cook
+        <option> Peter Brown
+        <option> John Doe
+        </select>
+    </p>
+</div>
+<!-- tr==tablerow, td==datacell -->
+<div id="tableContainer" syle="height: 200px; width: 100%">
+    <p>
+      <table>
+        <thead id="table_head">
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>DOB</th>
+            <th>Weight</th>
+          </tr>
+        </thead>
+        <tbody id="table_body">
+        </tbody>
+      </table>
+    </p>
+</div>
+<div id="chartContainer" style="height: 270px; width: 100%;"></div>
+<div id="textContainer">
+    <p>
+        <label for="from">Your message to the patient:</label>
+        <br /> <!-- this puts the label right on top of the textArea -->
+        <textarea id="textArea" name="message" style="height: 120px; width: 100%;" onclick="this.value=''" >Enter your message here...
+        </textarea>
+        <button id="sendButton" onclick="submitText(getSelectedUser())" type="button" style="height: 30px; width: 70px;" >Send</button>
+    </p>
+</div>
+<script src="https://www.gstatic.com/firebasejs/4.6.2/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDzFIjvkdLZg81wjBt-4MURRQNX6qG1ofw",
+    authDomain: "mobapp-f7b3b.firebaseapp.com",
+    databaseURL: "https://mobapp-f7b3b.firebaseio.com",
+    projectId: "mobapp-f7b3b",
+    storageBucket: "mobapp-f7b3b.appspot.com",
+    messagingSenderId: "760218354599"
+  };
+  firebase.initializeApp(config);
+</script>
+<!-- script for loading data into database -->
+<script src="index.js"></script>
+<script>
+    window.onload = function () {
+        var limit = 30;    //increase number of dataPoints by increasing the limit
+        var y = 0;
+        var data = [];
+        var dataSeries = { type: "line", color: "red" };
+        var dataPoints = [];
+        for (var i = 0; i < limit; i += 0.1) {
+            y = Math.round(Math.random() * 5);
+            dataPoints.push({
+                x: i,
+                y: y
+            });
+        }
+        dataSeries.dataPoints = dataPoints;
+        data.push(dataSeries);
+
+        //Better to construct options first and then pass it as a parameter
+        var options = {
+            zoomEnabled: true,
+            animationEnabled: true,
+            title: {
+                text: "ECG"
+            },
+            axisX: {
+                labelAngle: 30,
+                title: "Time (seconds)"
+            },
+            axisY: {
+                includeZero: false,
+                title: "Voltage (microVolts)"
+            },
+            data: data  // random data
+        };
+
+        $("#chartContainer").CanvasJSChart(options);
+
+    }
+
+    function getSelectedUser() {
+        var e = document.getElementById("selectedItem");
+        var strUser = e.options[e.selectedIndex].text;
+        var f = document.getElementById("name");
+        f.value = strUser;
+        return strUser;
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-messaging.js"></script>
+<script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+<script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
+</body>
+</html>
