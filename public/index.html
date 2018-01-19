@@ -64,6 +64,11 @@
         <button id="sendButton" onclick="submitText(getSelectedUser())" type="button" style="height: 30px; width: 70px;" >Send</button>
     </p>
 </div>
+
+
+
+
+
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase.js"></script>
 <script>
   // Initialize Firebase
@@ -77,8 +82,13 @@
   };
   firebase.initializeApp(config);
 </script>
-<!-- script for loading data into database -->
-<script src="index.js"></script>
+
+
+
+<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+<script type="text/javascript" src="index.js"></script>
+<!-- <script src="jquery-1.10.2.min.js"></script> -->
+
 <script>
     window.onload = function () {
         var limit = 30;    //increase number of dataPoints by increasing the limit
@@ -119,14 +129,17 @@
     }
 
     function getSelectedUser() {
+        // alert("getSelectedUser")
         var e = document.getElementById("selectedItem");
         var strUser = e.options[e.selectedIndex].text;
-        var f = document.getElementById("name");
-        f.value = strUser;
+        //alert(strUser)
+        //var f = document.getElementById("name");
+        //alert(f)
+        //f.value = strUser;
+        //alert(f.value)
         return strUser;
     }
 </script>
-<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-database.js"></script>
