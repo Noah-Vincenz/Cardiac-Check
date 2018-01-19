@@ -1,9 +1,17 @@
+
+
 var textArea = document.getElementById("textArea");
 var sendButton = document.getElementById("sendButton");
 
 const db = firebase.database();
+
 //var db = firebase.database().ref();
 const patientsRef = db.ref.child("patients");
+
+patientsRef.on("child_added", function(snapshot) {
+  alert(snapshot.val());
+  //updateStarCount(postElement, snapshot.val());
+});
 
 /*
 patientsRef.on("child_added", snap => {
@@ -20,6 +28,8 @@ patientsRef.on("child_added", snap => {
 
 });
 */
+
+/*
 patientsRef.on("child_added", function(snapshot, prevChildKey) {
   window.alert("Message");
 
@@ -31,7 +41,8 @@ patientsRef.on("child_added", function(snapshot, prevChildKey) {
   $("#table_body").append(<tr><td> + id + </td><td> + name + </td><td> + dob + </td><td> + weight + </td></tr>);
 
 });
-
+*/
+/*
 patientsRef.on("child_changed", snap => {
 
   window.alert("Message");
@@ -58,12 +69,11 @@ patientsRef.on("child_removed", snap => {
 
 });
 
+*/
+
 function submitText(recipient) {
 
-  //this is to sign up
-  //writePatientData("3", "Gary", "22/12/1996", "95kg");
-  window.alert("Message will be stored on the database!")
-
+  //alert("submittingText")
   writeMessagesData(recipient, textArea.value)
   window.alert("Message has been stored on the database!")
 
@@ -79,7 +89,8 @@ function writePatientsData(patientId, patientName, patientDob, patientWeight) {
 }
 
 function writeMessagesData(recipientId, messageContent) {
-    db.ref('messages/' + recipientId + " " + getDate()).set(messageContent);
+    //alert("submittingText")
+    db.ref("messages/" + recipientId + " " + getDate()).set(messageContent);
 }
 
 function getDate() {
@@ -91,7 +102,6 @@ function getDate() {
    var dateTime = day + '-' + month + "-" + year;
     return dateTime;
 }
-
 
 function showAlert() {
 
