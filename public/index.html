@@ -30,7 +30,7 @@
 <div id="topContainer">
     <p>
         <B>Select a patient:</B> <BR>
-        <select id="selectedItem" onchange="getSelectedUser()" NAME="Patient">
+        <select id="patientsSelection" onchange="getSelectedUser()" NAME="Patient">
         <option SELECTED> Thomas Cook
         <option> Peter Brown
         <option> John Doe
@@ -40,7 +40,7 @@
 <!-- tr==tablerow, td==datacell -->
 <div id="tableContainer" syle="height: 200px; width: 100%">
     <p>
-      <table>
+      <table id="my_table">
         <thead id="table_head">
           <tr>
             <th>ID</th>
@@ -88,7 +88,6 @@
 <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
 <script type="text/javascript" src="index.js"></script>
 <!-- <script src="jquery-1.10.2.min.js"></script> -->
-
 <script>
     window.onload = function () {
         var limit = 30;    //increase number of dataPoints by increasing the limit
@@ -130,7 +129,7 @@
 
     function getSelectedUser() {
         // alert("getSelectedUser")
-        var e = document.getElementById("selectedItem");
+        var e = document.getElementById("patientsSelection");
         var strUser = e.options[e.selectedIndex].text;
         //alert(strUser)
         //var f = document.getElementById("name");
