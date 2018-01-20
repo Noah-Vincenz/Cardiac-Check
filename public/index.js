@@ -2,72 +2,74 @@
 
 var textArea = document.getElementById("textArea");
 var sendButton = document.getElementById("sendButton");
+var tableBody = document.getElementById("table_body");
+
 
 const db = firebase.database();
 const patientsRef = db.ref("patients");
 
+patientsRef.on("child_added", function(snapshot) {
+    alert(snapshot.val().name);
+    var sel = document.getElementById("patientsSelection");
+    var opt = document.createElement("option");
+    opt.innerHTML = snapshot.val().name;
+    opt.value = snapshot.val().name;
+    sel.appendChild(opt);
+    /*
+    snapshot.forEach(function(child) {
+      //alert(snapshot.val());
+      alert(child.val());
+      alert(snapshot.val().name);
+      console.log(child.key+": "+child.val());
+    });
+    */
 
+});
+/*
+  var cuisines = ["Chinese","Indian"];
+  var sel = document.getElementById('CuisineList');
+  for(var i = 0; i < cuisines.length; i++) {
+      var opt = document.createElement('option');
+      opt.innerHTML = cuisines[i];
+      opt.value = cuisines[i];
+      sel.appendChild(opt);
+}
+
+
+function retrievePatientData(patient) {
+
+}
+*/
+/*
 patientsRef.on("child_added", function(snapshot) {
   alert(snapshot.val());
+  var id = snapshot.child("id").val();
+  var name = snapshot.child("name").val();
+  var dob = snapshot.child("dob").val();
+  var weight = snapshot.child("weight").val();
+  var tableRef = document.getElementById('my_table');//.getElementsByTagName('table_body');
+
+
+  // Insert a row in the table at row index 0
+  var newRow = tableRef.insertRow(0);
+  alert(snapshot.val());
+
+  // Insert a cell in the row at index 0
+  var newCell = newRow.insertCell(0);
+
+  // Append a text node to the cell
+  var newText = document.createTextNode('New top row');
+
+  newCell.appendChild(newText);
+  //$("#table_body").append(<tr><td> + id + </td></tr>);
+
+    //<td> + name + </td><td> + dob + </td><td> + weight + </td></tr>);
+
+  alert(snapshot.val());
+
+
   //updateStarCount(postElement, snapshot.val());
 });
-
-/*
-patientsRef.on("child_added", snap => {
-
-  window.alert("Message");
-  alert(snap.val());
-  var id = snap.child("id").val();
-  var name = snap.child("name").val();
-  var name = snap.child("dob").val();
-  var name = snap.child("weight").val();
-
-  $("#table_body").append(<tr><td> + id + </td><td> + name + </td><td> + dob + </td><td> + weight + </td></tr>);
-
-
-});
-*/
-
-/*
-patientsRef.on("child_added", function(snapshot, prevChildKey) {
-  window.alert("Message");
-
-  var id = snap.child("id").val();
-  var name = snap.child("name").val();
-  var name = snap.child("dob").val();
-  var name = snap.child("weight").val();
-
-  $("#table_body").append(<tr><td> + id + </td><td> + name + </td><td> + dob + </td><td> + weight + </td></tr>);
-
-});
-*/
-/*
-patientsRef.on("child_changed", snap => {
-
-  window.alert("Message");
-  var id = snap.child("id").val();
-  var name = snap.child("name").val();
-  var name = snap.child("dob").val();
-  var name = snap.child("weight").val();
-
-  $("#table_body").append(<tr><td> + id + </td><td> + name + </td><td> + dob + </td><td> + weight + </td></tr>);
-
-
-});
-
-patientsRef.on("child_removed", snap => {
-
-  window.alert("Message");
-  var id = snap.child("id").val();
-  var name = snap.child("name").val();
-  var name = snap.child("dob").val();
-  var name = snap.child("weight").val();
-
-  $("#table_body").append(<tr><td> + id + </td><td> + name + </td><td> + dob + </td><td> + weight + </td></tr>);
-
-
-});
-
 */
 
 function submitText(recipient) {
