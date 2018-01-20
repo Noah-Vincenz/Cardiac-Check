@@ -4,9 +4,8 @@ var textArea = document.getElementById("textArea");
 var sendButton = document.getElementById("sendButton");
 
 const db = firebase.database();
+const patientsRef = db.ref("patients");
 
-//var db = firebase.database().ref();
-const patientsRef = db.ref.child("patients");
 
 patientsRef.on("child_added", function(snapshot) {
   alert(snapshot.val());
