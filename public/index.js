@@ -3,78 +3,65 @@
 var textArea = document.getElementById("textArea");
 var sendButton = document.getElementById("sendButton");
 var tableBody = document.getElementById("table_body");
-
+var patientsSelection = document.getElementById("patients_selection");
 
 const db = firebase.database();
 const patientsRef = db.ref("patients");
 
+function changeDataShown(strUser) {
+    alert("changing data shown");
+    //var tableRef = document.getElementById('my_table');//.getElementsByTagName('table_body');
+    patientsRef.orderByChild("name").equalTo(strUser).on("value", function(snapshot) { // patients
+
+        snapshot.forEach(function(data) { // = corresponding patient ie. patient2
+
+            var id;
+            var name;
+            var dob;
+            var weight;
+            data.forEach(function(value) { // each value for entry: id, name, dob, weight
+
+                var val = value.val(); // =Bob, 93kg etc.
+                var key = value.key; // =id, name etc.
+
+                if (key == "id") {
+                    id = val;
+                } else if (key == "name") {
+                    name = val;
+                } else if (key == "dob") {
+                    dob = val;
+                } else if (key == "weight"){
+                    weight = val;
+                }
+
+
+            });
+            var str = "<tr><td>"+id+"</td><td>"+name+"</td><td>"+dob+"</td><td>"+weight+"</td></tr>";
+
+            $("#my_table").append(str);
+
+        });
+
+
+    });
+}
+
+
+function testF() {
+  alert("TestF");
+}
+
 patientsRef.on("child_added", function(snapshot) {
-    alert(snapshot.val().name);
-    var sel = document.getElementById("patientsSelection");
     var opt = document.createElement("option");
     opt.innerHTML = snapshot.val().name;
     opt.value = snapshot.val().name;
-    sel.appendChild(opt);
-    /*
-    snapshot.forEach(function(child) {
-      //alert(snapshot.val());
-      alert(child.val());
-      alert(snapshot.val().name);
-      console.log(child.key+": "+child.val());
-    });
-    */
-
+    patientsSelection.appendChild(opt);
 });
-/*
-  var cuisines = ["Chinese","Indian"];
-  var sel = document.getElementById('CuisineList');
-  for(var i = 0; i < cuisines.length; i++) {
-      var opt = document.createElement('option');
-      opt.innerHTML = cuisines[i];
-      opt.value = cuisines[i];
-      sel.appendChild(opt);
-}
 
 
-function retrievePatientData(patient) {
-
-}
-*/
-/*
-patientsRef.on("child_added", function(snapshot) {
-  alert(snapshot.val());
-  var id = snapshot.child("id").val();
-  var name = snapshot.child("name").val();
-  var dob = snapshot.child("dob").val();
-  var weight = snapshot.child("weight").val();
-  var tableRef = document.getElementById('my_table');//.getElementsByTagName('table_body');
-
-
-  // Insert a row in the table at row index 0
-  var newRow = tableRef.insertRow(0);
-  alert(snapshot.val());
-
-  // Insert a cell in the row at index 0
-  var newCell = newRow.insertCell(0);
-
-  // Append a text node to the cell
-  var newText = document.createTextNode('New top row');
-
-  newCell.appendChild(newText);
-  //$("#table_body").append(<tr><td> + id + </td></tr>);
-
-    //<td> + name + </td><td> + dob + </td><td> + weight + </td></tr>);
-
-  alert(snapshot.val());
-
-
-  //updateStarCount(postElement, snapshot.val());
-});
-*/
 
 function submitText(recipient) {
 
-  //alert("submittingText")
   writeMessagesData(recipient, textArea.value)
   window.alert("Message has been stored on the database!")
 
@@ -90,7 +77,6 @@ function writePatientsData(patientId, patientName, patientDob, patientWeight) {
 }
 
 function writeMessagesData(recipientId, messageContent) {
-    //alert("submittingText")
     db.ref("messages/" + recipientId + " " + getDate()).set(messageContent);
 }
 
@@ -110,12 +96,3 @@ function showAlert() {
 
 
 }
-
-/* FOR LISTENING TO CHANGES
-
-var starCountRef = firebase.database().ref('posts/' + postId + '/starCount');
-starCountRef.on('value', function(snapshot) {
-  updateStarCount(postElement, snapshot.val());
-});
-
-*/
