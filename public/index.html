@@ -30,10 +30,7 @@
 <div id="topContainer">
     <p>
         <B>Select a patient:</B> <BR>
-        <select id="patientsSelection" onchange="getSelectedUser()" NAME="Patient">
-        <option SELECTED> Thomas Cook
-        <option> Peter Brown
-        <option> John Doe
+        <select id="patients_selection" onchange="getSelectedUser()" NAME="Patient">
         </select>
     </p>
 </div>
@@ -128,14 +125,18 @@
     }
 
     function getSelectedUser() {
-        // alert("getSelectedUser")
-        var e = document.getElementById("patientsSelection");
+        alert("getSelectedUser");
+        var e = document.getElementById("patients_selection");
         var strUser = e.options[e.selectedIndex].text;
         //alert(strUser)
         //var f = document.getElementById("name");
         //alert(f)
         //f.value = strUser;
         //alert(f.value)
+        changeDataShown(strUser);
+
+
+
         return strUser;
     }
 </script>
