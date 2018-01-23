@@ -30,7 +30,7 @@
 <div id="topContainer">
     <p>
         <B>Select a patient:</B> <BR>
-        <select id="patients_selection" onchange="getSelectedUser()" NAME="Patient">
+        <select id="patients_selection" onchange="changeDataShown(getSelectedUser())" NAME="Patient">
         </select>
     </p>
 </div>
@@ -56,7 +56,7 @@
     <p>
         <label for="from">Your message to the patient:</label>
         <br /> <!-- this puts the label right on top of the textArea -->
-        <textarea id="textArea" name="message" style="height: 120px; width: 100%;" onclick="this.value=''" >Enter your message here...
+        <textarea id="textArea" name="message" style="height: 260px; width: 100%;" onclick="this.value=''" >Enter your message here...
         </textarea>
         <button id="sendButton" onclick="submitText(getSelectedUser())" type="button" style="height: 30px; width: 70px;" >Send</button>
     </p>
@@ -85,61 +85,6 @@
 <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
 <script type="text/javascript" src="index.js"></script>
 <!-- <script src="jquery-1.10.2.min.js"></script> -->
-<script>
-    window.onload = function () {
-        var limit = 30;    //increase number of dataPoints by increasing the limit
-        var y = 0;
-        var data = [];
-        var dataSeries = { type: "line", color: "red" };
-        var dataPoints = [];
-        for (var i = 0; i < limit; i += 0.1) {
-            y = Math.round(Math.random() * 5);
-            dataPoints.push({
-                x: i,
-                y: y
-            });
-        }
-        dataSeries.dataPoints = dataPoints;
-        data.push(dataSeries);
-
-        //Better to construct options first and then pass it as a parameter
-        var options = {
-            zoomEnabled: true,
-            animationEnabled: true,
-            title: {
-                text: "ECG"
-            },
-            axisX: {
-                labelAngle: 30,
-                title: "Time (seconds)"
-            },
-            axisY: {
-                includeZero: false,
-                title: "Voltage (microVolts)"
-            },
-            data: data  // random data
-        };
-
-        $("#chartContainer").CanvasJSChart(options);
-
-    }
-
-    function getSelectedUser() {
-        alert("getSelectedUser");
-        var e = document.getElementById("patients_selection");
-        var strUser = e.options[e.selectedIndex].text;
-        //alert(strUser)
-        //var f = document.getElementById("name");
-        //alert(f)
-        //f.value = strUser;
-        //alert(f.value)
-        changeDataShown(strUser);
-
-
-
-        return strUser;
-    }
-</script>
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.6.2/firebase-database.js"></script>
