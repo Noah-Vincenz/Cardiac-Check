@@ -1,0 +1,22 @@
+{
+  "name": "public",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify index.js -o bundle.js",
+    "watch": "watchify index.js -o bundle.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^16.1.0",
+    "watchify": "^3.10.0"
+  },
+  "dependencies": {
+    "fft-js": "0.0.11",
+    "kalmanjs": "^1.0.0-beta",
+    "lpf": "^1.0.0",
+    "slayer": "^1.0.1"
+  }
+}
