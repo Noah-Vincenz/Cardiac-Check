@@ -261,6 +261,8 @@ function doSignalProcessing(patientName) {
                                 var qrsIntervalsSum = 0;
                                 var qrsIntervalAvg;
                                 var tmpTime;
+                                // to keep track of S for T detection
+                                var sArray = [];
                                 for (var i = 0; i < spikes.length; ++i) {
                                     if (i < spikes.length - 1) {
                                         rrIntervalsSum += spikes[i+1].x - spikes[i].x;
@@ -277,10 +279,11 @@ function doSignalProcessing(patientName) {
                                             currentSmallest2 = xyArrayData[tmpTime+1];
                                             tmpTime += 1;
                                         }
+                                        sArray.push(currentSmallest2);
                                         //currentSmallest1 == Q
                                         //currentSmallest2 == S
-                                        console.log(currentSmallest2.x*1000 - currentSmallest1.x*1000);
-                                        qrsIntervalsSum += (currentSmallest2.x*1000 - currentSmallest1.x*1000);
+                                        console.log(Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000));
+                                        qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
 
                                     } else {
 
@@ -296,23 +299,18 @@ function doSignalProcessing(patientName) {
                                             currentSmallest2 = xyArrayData[tmpTime+1];
                                             tmpTime += 1;
                                         }
+                                        sArray.push(currentSmallest2);
                                         //currentSmallest1 == Q
                                         //currentSmallest2 == S
-                                        console.log(currentSmallest2.x*1000 - currentSmallest1.x*1000);
-                                        qrsIntervalsSum += (currentSmallest2.x*1000 - currentSmallest1.x*1000);
+                                        console.log(Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000));
+                                        qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
 
                                     }
                                 }
-                                console.log(rrIntervalsSum / spikes.length);
-                                document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round((rrIntervalsSum / spikes.length)) + " ms";
-                                console.log("QRS INTERVALS SUM");
-                                console.log(qrsIntervalsSum);
-                                console.log("SPIKES LENGTH");
-                                console.log(spikes.length);
-                                qrsIntervalAvg = Math.round(qrsIntervalsSum / spikes.length * 10);
-                                console.log("QRS INTERVAL AVG");
-                                console.log(qrsIntervalAvg);
-                                document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + qrsIntervalAvg + " ms";
+                                console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length);
+                                document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) + " ms";
+                                console.log("QRS INTERVAL AVG: " + qrsIntervalAvg);
+                                document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
 
 
 
