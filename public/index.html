@@ -35,7 +35,7 @@
     </p>
 </div>
 <!-- tr==tablerow, td==datacell -->
-<div id="tableContainer" syle="height: 200px; width: 100%">
+<div id="tableContainer">
     <p>
       <table id="my_table">
         <thead id="table_head">
@@ -52,6 +52,24 @@
     </p>
 </div>
 <div id="chartContainer" style="height:270px; width: 100%;"></div>
+<div id="InfoContainer" style="height: 90px; width: 100%;">
+    <p id="heartRateParagraph" font-size: 45px;></p>
+    <p id="RRIntervalParagraph" font-size: 45px;></p>
+    <p id="QRSIntervalParagraph" font-size: 45px;></p>
+</div>
+<div id="chartContainer2" style="height:270px; width: 100%;"></div>
+<div id="chartContainer3" style="height:270px; width: 100%;"></div>
+<div id="chartContainer4" style="height:270px; width: 100%;"></div>
+<div id="chartContainer5" style="height:270px; width: 100%;"></div>
+
+
+
+
+<!--
+<div id="buttonContainer">
+    <a onClick="doSignalProcessing(getSelectedUser())" href="signalprocessing.html">Signal Processing</a>
+</div>
+-->
 <div id="textContainer">
     <p>
         <label for="from">Your message to the patient:</label>
@@ -83,7 +101,8 @@
 
 
 <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
-<script type="text/javascript" src="index.js"></script>
+<!--script type="text/javascript" src="index.js"></script-->
+<script src="bundle.js" charset="utf-8"></script>
 <!-- <script src="jquery-1.10.2.min.js"></script> -->
 <script src="https://www.gstatic.com/firebasejs/4.9.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/4.9.1/firebase-auth.js"></script>
