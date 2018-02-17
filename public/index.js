@@ -258,11 +258,62 @@ function doSignalProcessing(patientName) {
                                 console.log(bpm+'bpm');
                                 document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + bpm + "bpm";
                                 var rrIntervalsSum = 0;
-                                for (var i = 0; i < spikes.length - 1; ++i) {
-                                    rrIntervalsSum += spikes[i+1].x - spikes[i].x;
+                                var qrsIntervalsSum = 0;
+                                var qrsIntervalAvg;
+                                var tmpTime;
+                                for (var i = 0; i < spikes.length; ++i) {
+                                    if (i < spikes.length - 1) {
+                                        rrIntervalsSum += spikes[i+1].x - spikes[i].x;
+
+                                        tmpTime = spikes[i].x; //currently time of spike
+                                        var currentSmallest1 = xyArrayData[tmpTime];
+                                        while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
+                                            currentSmallest1 = xyArrayData[tmpTime-1];
+                                            tmpTime -= 1;
+                                        }
+                                        tmpTime = spikes[i].x; //currently time of spike
+                                        var currentSmallest2 = xyArrayData[tmpTime];
+                                        while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
+                                            currentSmallest2 = xyArrayData[tmpTime+1];
+                                            tmpTime += 1;
+                                        }
+                                        //currentSmallest1 == Q
+                                        //currentSmallest2 == S
+                                        console.log(currentSmallest2.x*1000 - currentSmallest1.x*1000);
+                                        qrsIntervalsSum += (currentSmallest2.x*1000 - currentSmallest1.x*1000);
+
+                                    } else {
+
+                                        tmpTime = spikes[i].x; //currently time of spike
+                                        var currentSmallest1 = xyArrayData[tmpTime];
+                                        while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
+                                            currentSmallest1 = xyArrayData[tmpTime-1];
+                                            tmpTime -= 1;
+                                        }
+                                        tmpTime = spikes[i].x; //currently time of spike
+                                        var currentSmallest2 = xyArrayData[tmpTime];
+                                        while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
+                                            currentSmallest2 = xyArrayData[tmpTime+1];
+                                            tmpTime += 1;
+                                        }
+                                        //currentSmallest1 == Q
+                                        //currentSmallest2 == S
+                                        console.log(currentSmallest2.x*1000 - currentSmallest1.x*1000);
+                                        qrsIntervalsSum += (currentSmallest2.x*1000 - currentSmallest1.x*1000);
+
+                                    }
                                 }
                                 console.log(rrIntervalsSum / spikes.length);
-                                document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round((rrIntervalsSum / spikes.length) * 10) + " ms";
+                                document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round((rrIntervalsSum / spikes.length)) + " ms";
+                                console.log("QRS INTERVALS SUM");
+                                console.log(qrsIntervalsSum);
+                                console.log("SPIKES LENGTH");
+                                console.log(spikes.length);
+                                qrsIntervalAvg = Math.round(qrsIntervalsSum / spikes.length * 10);
+                                console.log("QRS INTERVAL AVG");
+                                console.log(qrsIntervalAvg);
+                                document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + qrsIntervalAvg + " ms";
+
 
 
                           });
@@ -279,13 +330,13 @@ function doSignalProcessing(patientName) {
                           console.log(lpfArray);
                           drawGraph(lpfArray, 2, "Low Pass Filter");
 
-
+                          /*
                           //finding local minima for QRS interval detection
                           var mins = [];
                           //won't work if Q or S are within first 3 data points
                           for (var i = 3; i < lpfArray.length; ++i) {
                               //check if left and right point are larger and if 2 points to the left or right are greater than this point + 0.4 (-> steep R peak)
-                              if (lpfArray[i] < lpfArray[i-1] && lpfArray[i] < lpfArray[i+1] && (lpfArray[i-2] > lpfArray[i] || lpfArray[i] < lpfArray[i+2]) && (lpfArray[i+2] > (lpfArray[i] + 200) || lpfArray[i-2] > (lpfArray[i] + 200))) {
+                              if (lpfArray[i] <= lpfArray[i-1] && lpfArray[i] <= lpfArray[i+1] && (lpfArray[i-2] >= lpfArray[i] && lpfArray[i] <= lpfArray[i+2]) && (lpfArray[i+2] > (lpfArray[i] + 200) || lpfArray[i-2] > (lpfArray[i] + 200) || lpfArray[i+3] > (lpfArray[i] + 200) || lpfArray[i-3] > (lpfArray[i] + 200)  || lpfArray[i+4] > (lpfArray[i] + 200) || lpfArray[i-4] > (lpfArray[i] + 200) )) {
                                   //this stores min's index in lpfArray for the next check, and it's value
                                   mins.push({
                                       x: i,
@@ -316,7 +367,7 @@ function doSignalProcessing(patientName) {
                           }
                           console.log(qrsIntervalAvg);
                           document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + qrsIntervalAvg + " ms";
-
+*/
 
                           //Kalman filter
                           var kalmanFilter = new KalmanFilter({R: 0.01, Q: 3});
