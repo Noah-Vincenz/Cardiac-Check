@@ -9,6 +9,11 @@ var patientsSelection = document.getElementById("patients_selection");
 var xAxisStripLinesArray = [];
 var yAxisStripLinesArray = [];
 
+var xyArrayData = [];
+var yArrayData = [];
+var lpfArray = [];
+
+
 
 const db = firebase.database();
 const patientsRef = db.ref("patients");
@@ -24,6 +29,7 @@ window.onload = function () {
 
 // this is called when select item changes; the table is updated with the selected patient's data
 global.changeDataShown = function(strUser) {
+    emptyArrays();
     //we only want one row
     if ($('#my_table tr').length == 2) {
         document.getElementById("my_table").deleteRow(1);
@@ -234,8 +240,7 @@ function doSignalProcessing(patientName) {
                           lines = xhr.responseText.split("\n"); // Will separate each line into an array
 
 
-                          var xyArrayData = [];
-                          var yArrayData = [];
+                          // to keep track of S for T detection
                           var time = 0;
                           for (var i = 4; i < lines.length - 1; i++) {
                               xyArrayData.push({
@@ -246,126 +251,17 @@ function doSignalProcessing(patientName) {
                               time += 0.01;
                               time = parseFloat(time.toFixed(3));
                           }
-
-                          //peak detection & bpm
-                          slayer()
-                          .y(item => item.y)
-                          .fromArray(xyArrayData)
-                          .then(spikes => {
-                                console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
-                                //taking the average no of peaks in 10 seconds over the 30 second time period
-                                var bpm = (spikes.length / 3) * 6;
-                                console.log(bpm+'bpm');
-                                document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + bpm + "bpm";
-                                var rrIntervalsSum = 0;
-                                var qrsIntervalsSum = 0;
-                                var qrsIntervalAvg;
-                                var tmpTime;
-                                // to keep track of S for T detection
-                                var sArray = [];
-                                for (var i = 0; i < spikes.length; ++i) {
-                                    if (i < spikes.length - 1) {
-                                        rrIntervalsSum += spikes[i+1].x - spikes[i].x;
-
-                                        tmpTime = spikes[i].x; //currently time of spike
-                                        var currentSmallest1 = xyArrayData[tmpTime];
-                                        while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
-                                            currentSmallest1 = xyArrayData[tmpTime-1];
-                                            tmpTime -= 1;
-                                        }
-                                        tmpTime = spikes[i].x; //currently time of spike
-                                        var currentSmallest2 = xyArrayData[tmpTime];
-                                        while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
-                                            currentSmallest2 = xyArrayData[tmpTime+1];
-                                            tmpTime += 1;
-                                        }
-                                        sArray.push(currentSmallest2);
-                                        //currentSmallest1 == Q
-                                        //currentSmallest2 == S
-                                        console.log(Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000));
-                                        qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
-
-                                    } else {
-
-                                        tmpTime = spikes[i].x; //currently time of spike
-                                        var currentSmallest1 = xyArrayData[tmpTime];
-                                        while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
-                                            currentSmallest1 = xyArrayData[tmpTime-1];
-                                            tmpTime -= 1;
-                                        }
-                                        tmpTime = spikes[i].x; //currently time of spike
-                                        var currentSmallest2 = xyArrayData[tmpTime];
-                                        while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
-                                            currentSmallest2 = xyArrayData[tmpTime+1];
-                                            tmpTime += 1;
-                                        }
-                                        sArray.push(currentSmallest2);
-                                        //currentSmallest1 == Q
-                                        //currentSmallest2 == S
-                                        console.log(Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000));
-                                        qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
-
-                                    }
-                                }
-                                console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length);
-                                document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) + " ms";
-                                console.log("QRS INTERVAL AVG: " + qrsIntervalAvg);
-                                document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
+                          console.log('xyArrayData');
+                          console.log(xyArrayData);
+                          lowPassFilter();
+                          featureExtraction();
 
 
 
-                          });
 
 
-                          //low pass filter
-                          var lpfPreArrayData = [];
-                          for (var i = 0; i < yArrayData.length; ++i) {
-                              lpfPreArrayData[i] = yArrayData[i] * 1000;
-                          }
-                          lpf.smoothing = 0.5;
-                          var lpfArray = lpf.smoothArray(lpfPreArrayData);
-                          console.log("Low Pass");
-                          console.log(lpfArray);
-                          drawGraph(lpfArray, 2, "Low Pass Filter");
 
-                          /*
-                          //finding local minima for QRS interval detection
-                          var mins = [];
-                          //won't work if Q or S are within first 3 data points
-                          for (var i = 3; i < lpfArray.length; ++i) {
-                              //check if left and right point are larger and if 2 points to the left or right are greater than this point + 0.4 (-> steep R peak)
-                              if (lpfArray[i] <= lpfArray[i-1] && lpfArray[i] <= lpfArray[i+1] && (lpfArray[i-2] >= lpfArray[i] && lpfArray[i] <= lpfArray[i+2]) && (lpfArray[i+2] > (lpfArray[i] + 200) || lpfArray[i-2] > (lpfArray[i] + 200) || lpfArray[i+3] > (lpfArray[i] + 200) || lpfArray[i-3] > (lpfArray[i] + 200)  || lpfArray[i+4] > (lpfArray[i] + 200) || lpfArray[i-4] > (lpfArray[i] + 200) )) {
-                                  //this stores min's index in lpfArray for the next check, and it's value
-                                  mins.push({
-                                      x: i,
-                                      y: lpfArray[i]
-                                  });
-                              }
-                          }
-                          console.log("Mins");
-                          console.log(mins);
-                          console.log("Size of mins: "+ mins.length);
-                          var qrsIntervalsSum = 0;
-                          var qrsIntervalAvg;
-                          if (lpfArray[mins[0].x + 2] > mins[0].y + 200) {
-                              //must be Q, hence all even indices are Q
-                              console.log("Q is first element.");
-                              for (var i = 0; i < mins.length - 1; i += 2) {
-                                  qrsIntervalsSum += mins[i + 1].x - mins[i].x;
-                              }
-                              qrsIntervalAvg = Math.round(qrsIntervalsSum / (mins.length / 2) * 10);
 
-                          } else if (lpfArray[mins[0].x - 2] >  mins[0].y + 200) {
-                              //must be S, hence all even indices are S; first element can be neglected as it is s
-                              console.log("S is first element.");
-                              for (var i = 1; i < mins.length - 1; i += 2) {
-                                  qrsIntervalsSum += mins[i + 1].x - mins[i].x;
-                              }
-                              qrsIntervalAvg = Math.round(qrsIntervalsSum / ((mins.length / 2) - 1) * 10);
-                          }
-                          console.log(qrsIntervalAvg);
-                          document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + qrsIntervalAvg + " ms";
-*/
 
                           //Kalman filter
                           var kalmanFilter = new KalmanFilter({R: 0.01, Q: 3});
@@ -408,6 +304,176 @@ function doSignalProcessing(patientName) {
 
 
 }
+
+function featureExtraction() {
+  //peak detection & bpm for raw ECG
+  slayer()
+  .y(item => item.y)
+  .fromArray(xyArrayData)
+  .then(spikes => {
+        console.log('xyArray spikes');
+        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
+        //taking the average no of peaks in 10 seconds over the 30 second time period
+        var bpm = (spikes.length / 3) * 6;
+        console.log(bpm+'bpm');
+        document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + bpm + "bpm";
+        var rrIntervalsSum = 0;
+        var qrsIntervalsSum = 0;
+        var qrsIntervalAvg;
+        var tmpTime;
+        for (var i = 0; i < spikes.length; ++i) {
+            if (i < spikes.length - 1) {
+                rrIntervalsSum += spikes[i+1].x - spikes[i].x;
+
+                tmpTime = spikes[i].x; //currently time of spike
+                var currentSmallest1 = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
+                    currentSmallest1 = xyArrayData[tmpTime-1];
+                    tmpTime -= 1;
+                }
+                //found local min Q, now need to find beginning of QRS interval
+                while (xyArrayData[tmpTime-1].y > currentSmallest1.y) {
+                    currentSmallest1 = xyArrayData[tmpTime-1];
+                    tmpTime -= 1;
+                }
+                console.log('Q: '+currentSmallest1.x);
+
+                tmpTime = spikes[i].x; //currently time of spike
+                var currentSmallest2 = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
+                    currentSmallest2 = xyArrayData[tmpTime+1];
+                    tmpTime += 1;
+                }
+                //found local min S, now need to find end of QRS interval
+                while (xyArrayData[tmpTime+1].y > currentSmallest2.y + 0.02) {
+                    currentSmallest2 = xyArrayData[tmpTime+1];
+                    tmpTime += 1;
+                }
+                console.log('S: '+currentSmallest2.x);
+
+
+                //currentSmallest1 == Q
+                //currentSmallest2 == S
+                qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
+
+            } else {
+
+                tmpTime = spikes[i].x; //currently time of spike
+                var currentSmallest1 = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
+                    currentSmallest1 = xyArrayData[tmpTime-1];
+                    tmpTime -= 1;
+                }
+                //found local min Q, now need to find beginning of QRS interval
+                while (xyArrayData[tmpTime-1].y > currentSmallest1.y) {
+                    currentSmallest1 = xyArrayData[tmpTime-1];
+                    tmpTime -= 1;
+                }
+                console.log('Q: '+currentSmallest1.x);
+
+
+                tmpTime = spikes[i].x; //currently time of spike
+                var currentSmallest2 = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
+                    currentSmallest2 = xyArrayData[tmpTime+1];
+                    tmpTime += 1;
+                }
+                //found local min S, now need to find end of QRS interval
+                while (xyArrayData[tmpTime+1].y > currentSmallest2.y + 0.02) {
+                    currentSmallest2 = xyArrayData[tmpTime+1];
+                    tmpTime += 1;
+                }
+                console.log('S: '+currentSmallest2.x);
+
+
+                //currentSmallest1 == Q
+                //currentSmallest2 == S
+                qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
+
+            }
+        }
+
+
+
+        console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length);
+        document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) + " ms";
+        console.log("QRS INTERVAL AVG: " + qrsIntervalsSum / spikes.length);
+        document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
+
+        doTDetection();
+
+
+  });
+}
+
+function doTDetection() {
+  //T detection from sArray for ST interval, QT
+  var sArray = [];
+  var tArray = [];
+  console.log(lpfArray);
+  slayer().fromArray(lpfArray).then(spikes => {
+        console.log('LPF spikes');
+        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
+        for (var i = 0; i < spikes.length; ++i) {
+            var tmpTime = spikes[i].x;
+            var currentSmallest = lpfArray[tmpTime];
+
+            while (lpfArray[tmpTime+1] < currentSmallest) {
+                currentSmallest = lpfArray[tmpTime+1];
+                tmpTime += 1;
+
+            }
+            sArray.push({
+                x: tmpTime,
+                y: currentSmallest
+            });
+
+        }
+        console.log('sArray: ');
+        console.log(sArray);
+        //this code below has to be in here otherwise code outside of spikes code will execute first
+
+        //T detection
+        var stIntervalsSum = 0;
+        for (var i = 0; i < sArray.length; ++i) {
+
+            tmpTime = sArray[i].x; //currently time of spike
+            var currentLargest = lpfArray[tmpTime];
+
+            while (lpfArray[tmpTime+1] >= currentLargest) {
+                currentLargest = lpfArray[tmpTime+1];
+                tmpTime += 1;
+            }
+            tArray.push({
+                x: tmpTime,
+                y: currentLargest
+            });
+            stIntervalsSum += Math.round(tmpTime - sArray[i].x) * 10;
+        }
+        console.log('tArray: ');
+        console.log(tArray);
+        var stIntervalAvg = stIntervalsSum / sArray.length;
+        console.log("ST INTERVAL AVG: " + stIntervalAvg);
+        document.getElementById("STIntervalParagraph").innerHTML = "S-T Interval: " + Math.round(stIntervalAvg) + " ms";
+
+
+
+  });
+}
+
+function lowPassFilter() {
+  //low pass filter
+  var lpfPreArrayData = [];
+  for (var i = 0; i < yArrayData.length; ++i) {
+      lpfPreArrayData[i] = yArrayData[i] * 1000;
+  }
+  lpf.smoothing = 0.2;
+  lpfArray = lpf.smoothArray(lpfPreArrayData);
+  console.log("Low Pass");
+  console.log(lpfArray);
+  drawGraph(lpfArray, 2, "Low Pass Filter");
+}
+
 
 
 /*
@@ -495,4 +561,10 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
   }
   chart.render();
 
+}
+
+function emptyArrays() {
+    xyArrayData = [];
+    yArrayData = [];
+    lpfArray = [];
 }
