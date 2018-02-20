@@ -307,7 +307,10 @@ function doSignalProcessing(patientName) {
 
 function featureExtraction() {
   //peak detection & bpm for raw ECG
-  slayer()
+  var sl = slayer();
+  //otherwise there is two too many spikes detected in the raw ECG data for patient3
+  sl.config.minPeakDistance = 40;
+  sl
   .y(item => item.y)
   .fromArray(xyArrayData)
   .then(spikes => {
@@ -336,7 +339,6 @@ function featureExtraction() {
                     currentSmallest1 = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
-                console.log('Q: '+currentSmallest1.x);
 
                 tmpTime = spikes[i].x; //currently time of spike
                 var currentSmallest2 = xyArrayData[tmpTime];
@@ -349,9 +351,9 @@ function featureExtraction() {
                     currentSmallest2 = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
-                console.log('S: '+currentSmallest2.x);
 
-
+                //console.log('Q: '+currentSmallest1.x);
+                //console.log('S: '+currentSmallest2.x);
                 //currentSmallest1 == Q
                 //currentSmallest2 == S
                 qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
@@ -369,7 +371,6 @@ function featureExtraction() {
                     currentSmallest1 = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
-                console.log('Q: '+currentSmallest1.x);
 
 
                 tmpTime = spikes[i].x; //currently time of spike
@@ -383,9 +384,9 @@ function featureExtraction() {
                     currentSmallest2 = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
-                console.log('S: '+currentSmallest2.x);
 
-
+                //console.log('Q: '+currentSmallest1.x);
+                //console.log('S: '+currentSmallest2.x);
                 //currentSmallest1 == Q
                 //currentSmallest2 == S
                 qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
@@ -410,8 +411,52 @@ function doTDetection() {
   //T detection from sArray for ST interval, QT
   var sArray = [];
   var tArray = [];
+  var maxArray = [];
+  /*
+  sl = slayer();
+  sl.fromArray(lpfArray).then(spikes => {
+        console.log('lpf spikes');
+        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
+  });
+  */
+  for (var i = 1; i < lpfArray.length - 2; ++i) {
+      //var currentMax = lpfArray[0];
+      var currentIndex = 0;
+      if (lpfArray[i-1] <= lpfArray[i] && lpfArray[i+1] <= lpfArray[i] && lpfArray[i-2] <= lpfArray[i] && lpfArray[i+2] <= lpfArray[i] && lpfArray[i-2] <= lpfArray[i-1] && lpfArray[i+2] <= lpfArray[i+1] && (lpfArray[i-2] + 5 < lpfArray[i] || lpfArray[i+2] + 5 < lpfArray[i])) {
+          if (lpfArray[i+1] != lpfArray[i]) { //if there is two equal height maxima then we take the second one
+              maxArray.push({
+                  x: i,
+                  y: lpfArray[i]
+              });
+          }
+      }
+
+
+  }
+  console.log('maxArray');
+  console.log(maxArray);
+
+  /*
+  var sl = slayer();
+  //minPeakDistance needs to be set higher otherwise T peak is detected as R peak with some ECGs
+  sl.config.minPeakDistance = 11.8;
+
+  sl
+  .y(item => item.y)
+  .fromArray(xyArrayData)
+  .then(spikes => {
+        console.log('xy new spikes');
+        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
+  });
+
+  sl.fromArray(lpfArray).then(spikes => {
+        console.log('lpf spikes');
+        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
+  });
+  */
+  /*
   console.log(lpfArray);
-  slayer().fromArray(lpfArray).then(spikes => {
+  sl.fromArray(lpfArray).then(spikes => {
         console.log('LPF spikes');
         console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
         for (var i = 0; i < spikes.length; ++i) {
@@ -459,6 +504,7 @@ function doTDetection() {
 
 
   });
+  */
 }
 
 function lowPassFilter() {
@@ -467,7 +513,7 @@ function lowPassFilter() {
   for (var i = 0; i < yArrayData.length; ++i) {
       lpfPreArrayData[i] = yArrayData[i] * 1000;
   }
-  lpf.smoothing = 0.2;
+  lpf.smoothing = 0.1;
   lpfArray = lpf.smoothArray(lpfPreArrayData);
   console.log("Low Pass");
   console.log(lpfArray);
