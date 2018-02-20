@@ -448,18 +448,25 @@ function doTDetection() {
           //maximum is a P
           //do PR Interval using qBegArray and xyArray - this works only because lpfArray shifts the P peaks to the right of where they are in original data
 
-//NOT WORKING, PR INTERVAL STARTS BEFORE P NOT AFTER
 
+          //need to go all the way up to the peak of P first as the data is fetched from lpfArray peaks, which are shifted to the right of the original peaks
           var tmpTime = maxArray[i].x;
-          var currentSmallest = xyArrayData[tmpTime];
-          while(currentSmallest.y > xyArrayData[tmpTime+1].y + 0.01) {
-              currentSmallest = xyArrayData[tmpTime+1];
-              tmpTime += 1;
+          var currentLargest = xyArrayData[tmpTime];
+          while(currentLargest.y <= xyArrayData[tmpTime-1].y) {
+              currentLargest = xyArrayData[tmpTime-1];
+              tmpTime -= 1;
+          }
+
+          //now we can move left from the peak in order to find the beginning of P
+          var currentSmallest = currentLargest;
+          while(currentSmallest.y > xyArrayData[tmpTime-1].y + 0.01) {
+              currentSmallest = xyArrayData[tmpTime-1];
+              tmpTime -= 1;
               //console.log('dsfs');
           }
+
           pBegArray.push(currentSmallest.x);
       } else if (i%3 == 2) { //i%2==0
-          console.log(i);
           //maximum is a T
           var tmpTime = maxArray[i].x;
           var currentSmallest = xyArrayData[tmpTime];
