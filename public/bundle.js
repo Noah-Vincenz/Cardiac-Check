@@ -14,6 +14,8 @@ var yAxisStripLinesArray = [];
 var xyArrayData = [];
 var yArrayData = [];
 var lpfArray = [];
+var qBegArray = []; //array of where Q begins
+var sEndArray = []; //array of where S ends
 
 
 
@@ -331,68 +333,71 @@ function featureExtraction() {
                 rrIntervalsSum += spikes[i+1].x - spikes[i].x;
 
                 tmpTime = spikes[i].x; //currently time of spike
-                var currentSmallest1 = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
-                    currentSmallest1 = xyArrayData[tmpTime-1];
+                var currentQBeg = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
+                    currentQBeg = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
                 //found local min Q, now need to find beginning of QRS interval
-                while (xyArrayData[tmpTime-1].y > currentSmallest1.y) {
-                    currentSmallest1 = xyArrayData[tmpTime-1];
+                while (xyArrayData[tmpTime-1].y > currentQBeg.y) {
+                    currentQBeg = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
 
                 tmpTime = spikes[i].x; //currently time of spike
-                var currentSmallest2 = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
-                    currentSmallest2 = xyArrayData[tmpTime+1];
+                var currentSEnd = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime+1].y < currentSEnd.y) {
+                    currentSEnd = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
                 //found local min S, now need to find end of QRS interval
-                while (xyArrayData[tmpTime+1].y > currentSmallest2.y + 0.02) {
-                    currentSmallest2 = xyArrayData[tmpTime+1];
+                while (xyArrayData[tmpTime+1].y > currentSEnd.y + 0.02) {
+                    currentSEnd = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
 
-                //console.log('Q: '+currentSmallest1.x);
-                //console.log('S: '+currentSmallest2.x);
-                //currentSmallest1 == Q
-                //currentSmallest2 == S
-                qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
+                //console.log('Q: '+currentQBeg.x);
+                //console.log('S: '+currentSEnd.x);
+                //currentQBeg == Q
+                //currentSEnd == S
+                qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
+                qBegArray.push(currentQBeg);
+                sEndArray.push(currentSEnd);
 
             } else {
 
                 tmpTime = spikes[i].x; //currently time of spike
-                var currentSmallest1 = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime-1].y < currentSmallest1.y) {
-                    currentSmallest1 = xyArrayData[tmpTime-1];
+                var currentQBeg = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
+                    currentQBeg = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
                 //found local min Q, now need to find beginning of QRS interval
-                while (xyArrayData[tmpTime-1].y > currentSmallest1.y) {
-                    currentSmallest1 = xyArrayData[tmpTime-1];
+                while (xyArrayData[tmpTime-1].y > currentQBeg.y) {
+                    currentQBeg = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
 
 
                 tmpTime = spikes[i].x; //currently time of spike
-                var currentSmallest2 = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime+1].y < currentSmallest2.y) {
-                    currentSmallest2 = xyArrayData[tmpTime+1];
+                var currentSEnd = xyArrayData[tmpTime];
+                while (xyArrayData[tmpTime+1].y < currentSEnd.y) {
+                    currentSEnd = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
                 //found local min S, now need to find end of QRS interval
-                while (xyArrayData[tmpTime+1].y > currentSmallest2.y + 0.02) {
-                    currentSmallest2 = xyArrayData[tmpTime+1];
+                while (xyArrayData[tmpTime+1].y > currentSEnd.y + 0.02) {
+                    currentSEnd = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
 
-                //console.log('Q: '+currentSmallest1.x);
-                //console.log('S: '+currentSmallest2.x);
-                //currentSmallest1 == Q
-                //currentSmallest2 == S
-                qrsIntervalsSum += Math.round(currentSmallest2.x*1000 - currentSmallest1.x*1000);
-
+                //console.log('Q: '+currentQBeg.x);
+                //console.log('S: '+currentSEnd.x);
+                //currentQBeg == Q
+                //currentSEnd == S
+                qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
+                qBegArray.push(currentQBeg);
+                sEndArray.push(currentSEnd);
             }
         }
 
@@ -437,76 +442,68 @@ function doTDetection() {
   }
   console.log('maxArray');
   console.log(maxArray);
+  var pBegArray = [];
+  var tEndArray = [];
+  for (var i = 0; i < maxArray.length; ++i) { //0 is P, 1, R, 2 is T
+      //console.log('1');
+      if (i%3 == 0) {
+          //maximum is a P
+          //do PR Interval using qBegArray and xyArray - this works only because lpfArray shifts the P peaks to the right of where they are in original data
 
-  /*
-  var sl = slayer();
-  //minPeakDistance needs to be set higher otherwise T peak is detected as R peak with some ECGs
-  sl.config.minPeakDistance = 11.8;
+//NOT WORKING, PR INTERVAL STARTS BEFORE P NOT AFTER
 
-  sl
-  .y(item => item.y)
-  .fromArray(xyArrayData)
-  .then(spikes => {
-        console.log('xy new spikes');
-        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
-  });
+          var tmpTime = maxArray[i].x;
+          var currentSmallest = xyArrayData[tmpTime];
+          while(currentSmallest.y > xyArrayData[tmpTime+1].y + 0.01) {
+              currentSmallest = xyArrayData[tmpTime+1];
+              tmpTime += 1;
+              //console.log('dsfs');
+          }
+          pBegArray.push(currentSmallest.x);
+      } else if (i%3 == 2) { //i%2==0
+          console.log(i);
+          //maximum is a T
+          var tmpTime = maxArray[i].x;
+          var currentSmallest = xyArrayData[tmpTime];
+          while(currentSmallest.y > xyArrayData[tmpTime+1].y + 0.01) {
+              currentSmallest = xyArrayData[tmpTime+1];
+              tmpTime += 1;
+              //console.log('dsfs');
+          }
+          tEndArray.push(currentSmallest.x);
 
-  sl.fromArray(lpfArray).then(spikes => {
-        console.log('lpf spikes');
-        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
-  });
-  */
-  /*
-  console.log(lpfArray);
-  sl.fromArray(lpfArray).then(spikes => {
-        console.log('LPF spikes');
-        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
-        for (var i = 0; i < spikes.length; ++i) {
-            var tmpTime = spikes[i].x;
-            var currentSmallest = lpfArray[tmpTime];
+      }
+  }
+  console.log('pBegArray: ');
+  console.log(pBegArray);
+  console.log('tEndArray: ');
+  console.log(tEndArray);
+  var prIntervalsSum = 0;
+  var qtIntervalsSum = 0;
+  var stIntervalsSum = 0;
+  for (var i = 0; i < pBegArray.length; ++i) {
+      prIntervalsSum += (qBegArray[i].x - pBegArray[i]).toFixed(3) * 1;
+  }
+  for (var i = 0; i < tEndArray.length; ++i) {
+      qtIntervalsSum += (tEndArray[i] - qBegArray[i].x).toFixed(3) * 1;
+      stIntervalsSum += (tEndArray[i] - sEndArray[i].x).toFixed(3) * 1;
 
-            while (lpfArray[tmpTime+1] < currentSmallest) {
-                currentSmallest = lpfArray[tmpTime+1];
-                tmpTime += 1;
-
-            }
-            sArray.push({
-                x: tmpTime,
-                y: currentSmallest
-            });
-
-        }
-        console.log('sArray: ');
-        console.log(sArray);
-        //this code below has to be in here otherwise code outside of spikes code will execute first
-
-        //T detection
-        var stIntervalsSum = 0;
-        for (var i = 0; i < sArray.length; ++i) {
-
-            tmpTime = sArray[i].x; //currently time of spike
-            var currentLargest = lpfArray[tmpTime];
-
-            while (lpfArray[tmpTime+1] >= currentLargest) {
-                currentLargest = lpfArray[tmpTime+1];
-                tmpTime += 1;
-            }
-            tArray.push({
-                x: tmpTime,
-                y: currentLargest
-            });
-            stIntervalsSum += Math.round(tmpTime - sArray[i].x) * 10;
-        }
-        console.log('tArray: ');
-        console.log(tArray);
-        var stIntervalAvg = stIntervalsSum / sArray.length;
-        console.log("ST INTERVAL AVG: " + stIntervalAvg);
-        document.getElementById("STIntervalParagraph").innerHTML = "S-T Interval: " + Math.round(stIntervalAvg) + " ms";
+  }
+  var prIntervalsAvg = (prIntervalsSum / qBegArray.length).toFixed(3) * 1000;
+  var qtIntervalsAvg = Math.round(qtIntervalsSum / qBegArray.length * 1000);
+  var stIntervalsAvg = Math.round(stIntervalsSum / tEndArray.length * 1000);
+  console.log('prIntervalsAvg');
+  console.log(prIntervalsAvg);
+  console.log('qtIntervalsAvg');
+  console.log(qtIntervalsAvg);
+  console.log('stIntervalsAvg');
+  console.log(stIntervalsAvg);
+  document.getElementById("PRIntervalParagraph").innerHTML = "P-R interval: " + prIntervalsAvg + " ms";
+  document.getElementById("QTIntervalParagraph").innerHTML = "Q-T interval: " + qtIntervalsAvg + " ms";
+  document.getElementById("STIntervalParagraph").innerHTML = "S-T interval: " + stIntervalsAvg + " ms";
 
 
 
-  });
-  */
 }
 
 function lowPassFilter() {
@@ -615,6 +612,8 @@ function emptyArrays() {
     xyArrayData = [];
     yArrayData = [];
     lpfArray = [];
+    qBegArray = [];
+    sEndArray = [];
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
