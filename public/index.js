@@ -329,13 +329,13 @@ function featureExtraction() {
         for (var i = 0; i < spikes.length; ++i) {
             if (i < spikes.length - 1) {
                 rrIntervalsSum += spikes[i+1].x - spikes[i].x;
-                console.log('RR: ' + spikes[i+1].x - spikes[i].x);
                 tmpTime = spikes[i].x; //currently time of spike
                 var currentQBeg = xyArrayData[tmpTime];
                 while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
                     currentQBeg = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
+
                 //found local min Q, now need to find beginning of QRS interval
                 while (xyArrayData[tmpTime-1].y > currentQBeg.y) {
                     currentQBeg = xyArrayData[tmpTime-1];
@@ -348,16 +348,21 @@ function featureExtraction() {
                     currentSEnd = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
+
                 //found local min S, now need to find end of QRS interval
                 while (xyArrayData[tmpTime+1].y > currentSEnd.y + 0.02) {
                     currentSEnd = xyArrayData[tmpTime+1];
                     tmpTime += 1;
                 }
 
+
                 //console.log('Q: '+currentQBeg.x);
                 //console.log('S: '+currentSEnd.x);
                 //currentQBeg == Q
                 //currentSEnd == S
+                //console.log('q: ' + currentQBeg.x*1000);
+                //console.log('s: ' + currentSEnd.x*1000);
+                //console.log('QRS: ' + Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
                 qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
                 qBegArray.push(currentQBeg);
                 sEndArray.push(currentSEnd);
@@ -393,6 +398,10 @@ function featureExtraction() {
                 //console.log('S: '+currentSEnd.x);
                 //currentQBeg == Q
                 //currentSEnd == S
+                //console.log('q: ' + currentQBeg.x*1000);
+                //console.log('s: ' + currentSEnd.x*1000);
+                //console.log('QRS: ' + Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
+                //console.log('QRS: '+ Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
                 qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
                 qBegArray.push(currentQBeg);
                 sEndArray.push(currentSEnd);
@@ -401,8 +410,8 @@ function featureExtraction() {
 
 
 
-        console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length);
-        document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) + " ms";
+        console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length * 10);
+        document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) * 10 + " ms";
         console.log("QRS INTERVAL AVG: " + qrsIntervalsSum / spikes.length);
         document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
 
@@ -488,9 +497,19 @@ function doTDetection() {
   var stIntervalsSum = 0;
   for (var i = 0; i < qBegArray.length; ++i) {
       prIntervalsSum += (qBegArray[i].x - pBegArray[i]).toFixed(3) * 1;
+      //var x = (qBegArray[i].x - pBegArray[i]).toFixed(3) * 1;
+      //console.log('P: ' + pBegArray[i]);
+      //console.log('R: ' + qBegArray[i].x);
+      //console.log('PR: '+x);
   }
   for (var i = 0; i < tEndArray.length; ++i) {
+      //var x = (tEndArray[i] - qBegArray[i].x).toFixed(3) * 1;
+      //console.log('QT: '+x);
       qtIntervalsSum += (tEndArray[i] - qBegArray[i].x).toFixed(3) * 1;
+      var x =  (tEndArray[i] - sEndArray[i].x).toFixed(3) * 1;
+      //console.log('S: '+sEndArray[i].x);
+      //console.log('T: '+tEndArray[i]);
+      //console.log('ST: '+x);
       stIntervalsSum += (tEndArray[i] - sEndArray[i].x).toFixed(3) * 1;
 
   }
