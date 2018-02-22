@@ -329,7 +329,7 @@ function featureExtraction() {
         for (var i = 0; i < spikes.length; ++i) {
             if (i < spikes.length - 1) {
                 rrIntervalsSum += spikes[i+1].x - spikes[i].x;
-
+                console.log('RR: ' + spikes[i+1].x - spikes[i].x);
                 tmpTime = spikes[i].x; //currently time of spike
                 var currentQBeg = xyArrayData[tmpTime];
                 while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
@@ -486,7 +486,7 @@ function doTDetection() {
   var prIntervalsSum = 0;
   var qtIntervalsSum = 0;
   var stIntervalsSum = 0;
-  for (var i = 0; i < pBegArray.length; ++i) {
+  for (var i = 0; i < qBegArray.length; ++i) {
       prIntervalsSum += (qBegArray[i].x - pBegArray[i]).toFixed(3) * 1;
   }
   for (var i = 0; i < tEndArray.length; ++i) {
