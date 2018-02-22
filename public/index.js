@@ -25,7 +25,7 @@ const storage = firebase.storage();
 
 
 window.onload = function () {
-    changeDataShown("Henry");
+    changeDataShown("Henry Croft");
     addStripLines();
 }
 
@@ -506,7 +506,7 @@ function doTDetection() {
       //var x = (tEndArray[i] - qBegArray[i].x).toFixed(3) * 1;
       //console.log('QT: '+x);
       qtIntervalsSum += (tEndArray[i] - qBegArray[i].x).toFixed(3) * 1;
-      var x =  (tEndArray[i] - sEndArray[i].x).toFixed(3) * 1;
+      //var x =  (tEndArray[i] - sEndArray[i].x).toFixed(3) * 1;
       //console.log('S: '+sEndArray[i].x);
       //console.log('T: '+tEndArray[i]);
       //console.log('ST: '+x);
