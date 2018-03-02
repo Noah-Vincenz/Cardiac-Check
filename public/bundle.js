@@ -12,6 +12,8 @@ var xAxisStripLinesArray = [];
 var yAxisStripLinesArray = [];
 
 var xyArrayData = [];
+var pcgArrayData = [];
+var pcgYArrayData = [];
 var yArrayData = [];
 var lpfArray = [];
 var qBegArray = []; //array of where Q begins
@@ -21,7 +23,7 @@ var sEndArray = []; //array of where S ends
 
 const db = firebase.database();
 const patientsRef = db.ref("patients");
-const recordsRef = db.ref("datarecords");
+//const recordsRef = db.ref("datarecords");
 const storage = firebase.storage();
 
 
@@ -71,6 +73,7 @@ global.changeDataShown = function(strUser) {
 
     });
     doSignalProcessing(strUser);
+    showPCG(strUser);
 }
 
 function updateGraph(patientKey) {
@@ -257,7 +260,7 @@ function doSignalProcessing(patientName) {
                           }
                           console.log('xyArrayData');
                           console.log(xyArrayData);
-                          lowPassFilter();
+                          lowPassFilter(1);
                           featureExtraction();
 
 
@@ -283,6 +286,8 @@ function doSignalProcessing(patientName) {
                           // Input is 1+0i 2+0i 3+0i 4+0i
                           var input = new Float32Array([]);
                           input = yArrayData;
+                          console.log('Y ARRAY DATA');
+                          console.log(yArrayData);
                           var output = new Float32Array(input.length);
                           var dftArray = computeDft(input, output);
                           console.log("Discrete Fourier");
@@ -309,6 +314,83 @@ function doSignalProcessing(patientName) {
 
 }
 
+function showPCG(patientName) {
+    patientsRef.orderByChild("name").equalTo(patientName).on("value", function(snapshot) { // patients
+        snapshot.forEach(function(data) { // = corresponding patient ie. patient2
+            var storageRef = storage.ref();
+            var pathReference = storageRef.child('PCGdata/'+data.key+'.txt');
+            pathReference.getDownloadURL().then(function(url) {
+                // This can be downloaded directly:
+                var xhr = new XMLHttpRequest();
+
+                xhr.open('GET', url);
+
+                xhr.responseType = 'text';
+                xhr.send();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {  // Makes sure the document is ready to parse.
+                        if (xhr.status === 200) {  // Makes sure it's found the file.
+                            allText = xhr.responseText;
+                            lines = xhr.responseText.split("\n"); // Will separate each line into an array
+
+
+                            // to keep track of S for T detection
+                            var time = 0;
+                            for (var i = 4; i < lines.length - 1; i++) {
+                                pcgArrayData.push({
+                                    x: time,
+                                    y: parseFloat(lines[i])*1
+                                });
+                                //yArrayData.push(lines[i]*1);
+                                time += 0.003;
+                                time = parseFloat(time.toFixed(3));
+                            }
+                            console.log('pcgArrayData');
+                            console.log(pcgArrayData);
+                            drawGraph(pcgArrayData, 6, "PCG");
+
+                            for (var i = 0; i < pcgArrayData.length; ++i) {
+                                pcgYArrayData.push(pcgArrayData[i].y);
+                            }
+                            var input = new Float32Array([]);
+                            input = pcgYArrayData;
+                            console.log('pcgYArrayData');
+                            console.log(pcgYArrayData);
+                            var output = new Float32Array(input.length);
+                            var dftArray = computeDft(input, output);
+                            drawGraph(dftArray[0], 7, "Discrete Fourier Transform Real");
+                            drawGraph(dftArray[1], 8, "Discrete Fourier Transform Image");
+
+                            //Kalman filter
+
+                            console.log('chers');
+                            console.log(pcgYArrayData);
+                            var kalmanFilter = new KalmanFilter({R: 0.01, Q: 3});
+                            var dataConstantKalman = pcgYArrayData.map(function(v) {
+                                return kalmanFilter.filter(v);
+                            });
+                            var kalmanArray = dataConstantKalman;
+                            //console.log("Kalman");
+                            //console.log(kalmanArray);
+                            drawGraph(kalmanArray, 9, "Kalman Filter")
+
+                            lowPassFilter(2);
+
+
+                        }
+                    }
+                };
+
+                xhr.send(null);
+
+            }).catch(function(error) {
+              // Handle any errors
+            });
+         });
+    });
+}
+
+
 function featureExtraction() {
   //peak detection & bpm for raw ECG
   var sl = slayer();
@@ -325,12 +407,15 @@ function featureExtraction() {
         console.log(bpm+'bpm');
         document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + bpm + "bpm";
         var rrIntervalsSum = 0;
+        var rrIntervalsArray = [];
         var qrsIntervalsSum = 0;
         var qrsIntervalAvg;
         var tmpTime;
         for (var i = 0; i < spikes.length; ++i) {
             if (i < spikes.length - 1) {
-                rrIntervalsSum += spikes[i+1].x - spikes[i].x;
+                var newRRInterval = spikes[i+1].x - spikes[i].x;
+                rrIntervalsSum += newRRInterval;
+                rrIntervalsArray.push(newRRInterval);
                 tmpTime = spikes[i].x; //currently time of spike
                 var currentQBeg = xyArrayData[tmpTime];
                 while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
@@ -339,7 +424,7 @@ function featureExtraction() {
                 }
 
                 //found local min Q, now need to find beginning of QRS interval
-                while (xyArrayData[tmpTime-1].y > currentQBeg.y) {
+                while (xyArrayData[tmpTime-1].y > currentQBeg.y + 0.02) {
                     currentQBeg = xyArrayData[tmpTime-1];
                     tmpTime -= 1;
                 }
@@ -414,8 +499,11 @@ function featureExtraction() {
 
         console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length * 10);
         document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) * 10 + " ms";
-        console.log("QRS INTERVAL AVG: " + qrsIntervalsSum / spikes.length);
-        document.getElementById("QRSIntervalParagraph").innerHTML = "Q-R-S interval: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
+        var rrIntervalsDiff = (Math.max(...rrIntervalsArray) - Math.min(...rrIntervalsArray))*10;
+        console.log('RR Max - Min: ' + rrIntervalsDiff);
+        document.getElementById("HRV").innerHTML = "Heart Rate Variability (difference between max and min NN): " + rrIntervalsDiff + " ms";
+        console.log("QRS COMPLEX AVG: " + qrsIntervalsSum / spikes.length);
+        document.getElementById("QRSComplexParagraph").innerHTML = "Q-R-S complex: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
 
         doTDetection();
 
@@ -528,21 +616,35 @@ function doTDetection() {
   document.getElementById("QTIntervalParagraph").innerHTML = "Q-T interval: " + qtIntervalsAvg + " ms";
   document.getElementById("STIntervalParagraph").innerHTML = "S-T interval: " + stIntervalsAvg + " ms";
 
+  //TODO: add PR and ST segments!!
+
 
 
 }
 
-function lowPassFilter() {
+function lowPassFilter(signalType) {
   //low pass filter
   var lpfPreArrayData = [];
-  for (var i = 0; i < yArrayData.length; ++i) {
-      lpfPreArrayData[i] = yArrayData[i] * 1000;
+  if (signalType == 1) { //ECG
+      for (var i = 0; i < yArrayData.length; ++i) {
+          lpfPreArrayData[i] = yArrayData[i] * 1000;
+      }
+      lpf.smoothing = 0.1;
+      lpfArray = lpf.smoothArray(lpfPreArrayData);
+      console.log("Low Pass");
+      console.log(lpfArray);
+      drawGraph(lpfArray, 2, "Low Pass Filter");
   }
-  lpf.smoothing = 0.1;
-  lpfArray = lpf.smoothArray(lpfPreArrayData);
-  console.log("Low Pass");
-  console.log(lpfArray);
-  drawGraph(lpfArray, 2, "Low Pass Filter");
+  else { //PCG
+      for (var i = 0; i < pcgYArrayData.length; ++i) {
+          lpfPreArrayData[i] = pcgYArrayData[i];
+      }
+      lpf.smoothing = 0.1;
+      lpfArray = lpf.smoothArray(lpfPreArrayData);
+      console.log("Low Pass");
+      console.log(lpfArray);
+      drawGraph(lpfArray, 10, "Low Pass Filter");
+  }
 }
 
 
@@ -573,6 +675,12 @@ function computeDft(inreal, inimag) {
 
 
 function drawGraph(arrayIn, chartContainerNumber, titleIn) {
+  if (chartContainerNumber==7 || chartContainerNumber==8) {
+    console.log('arrayIn');
+    console.log(arrayIn);
+    console.log(arrayIn[0]);
+    console.log(arrayIn[1]);
+  }
   var limit = 100000;    //increase number of dataPoints by increasing the limit
   var y = 0;
   var data = [];
@@ -585,15 +693,37 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
                 x: time,
                 y: parseFloat(arrayIn[i])/1000
             });
+            time += 0.01;
+            time = parseFloat(time.toFixed(3));
+        }
+        else if (chartContainerNumber==6 || chartContainerNumber==7 || chartContainerNumber==8) { //PCG
+
+
+            //console.log(arrayIn[i]);
+            //console.log(parseFloat(arrayIn[i])/1000*1);
+            if (chartContainerNumber==7 || chartContainerNumber==8) {
+              myDataPoints.push({
+                  x: time,
+                  y: arrayIn[i]/1000
+              });
+            }
+            else {
+              myDataPoints.push({
+                  x: time,
+                  y: arrayIn[i].y/1000
+              });
+            }
+            time += 0.003;
+            time = parseFloat(time.toFixed(3));
         }
         else {
             myDataPoints.push({
                 x: time,
                 y: parseFloat(arrayIn[i])*1
             });
+            time += 0.01;
+            time = parseFloat(time.toFixed(3));
         }
-        time += 0.01;
-        time = parseFloat(time.toFixed(3));
   }
   dataSeries.dataPoints = myDataPoints;
   data.push(dataSeries);
@@ -630,12 +760,26 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
       chart.axisX.stripLines = null;
       chart.axisY.stripLines = null;
   }
+  if(chartContainerNumber == 6) {
+      chart.axisX.stripLines = null;
+      chart.axisY.stripLines = null;
+      chart.axisY.title = "Amplitude (V)";
+      console.log('PCG myDataPoints:');
+      console.log(myDataPoints);
+  }
+  if(chartContainerNumber == 7 || chartContainerNumber == 8) {
+      //console.log('Here:');
+      //console.log(myDataPoints);
+  }
   chart.render();
 
 }
 
 function emptyArrays() {
+    textArea.value = "";
     xyArrayData = [];
+    pcgArrayData = [];
+    pcgYArrayData = [];
     yArrayData = [];
     lpfArray = [];
     qBegArray = [];
