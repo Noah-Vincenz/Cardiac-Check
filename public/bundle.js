@@ -365,7 +365,7 @@ function showPCG(patientName) {
 
                             console.log('chers');
                             console.log(pcgYArrayData);
-                            var kalmanFilter = new KalmanFilter({R: 0.01, Q: 3});
+                            var kalmanFilter = new KalmanFilter({R: 5000, Q: 1000});
                             var dataConstantKalman = pcgYArrayData.map(function(v) {
                                 return kalmanFilter.filter(v);
                             });
@@ -639,7 +639,7 @@ function lowPassFilter(signalType) {
       for (var i = 0; i < pcgYArrayData.length; ++i) {
           lpfPreArrayData[i] = pcgYArrayData[i];
       }
-      lpf.smoothing = 0.1;
+      lpf.smoothing = 0.05;
       lpfArray = lpf.smoothArray(lpfPreArrayData);
       console.log("Low Pass");
       console.log(lpfArray);
@@ -696,12 +696,12 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
             time += 0.01;
             time = parseFloat(time.toFixed(3));
         }
-        else if (chartContainerNumber==6 || chartContainerNumber==7 || chartContainerNumber==8) { //PCG
+        else if (chartContainerNumber==6 || chartContainerNumber==7 || chartContainerNumber==8 || chartContainerNumber==9 || chartContainerNumber==10) { //PCG
 
 
             //console.log(arrayIn[i]);
             //console.log(parseFloat(arrayIn[i])/1000*1);
-            if (chartContainerNumber==7 || chartContainerNumber==8) {
+            if (chartContainerNumber==7 || chartContainerNumber==8 || chartContainerNumber==9 || chartContainerNumber==10) {
               myDataPoints.push({
                   x: time,
                   y: arrayIn[i]/1000
