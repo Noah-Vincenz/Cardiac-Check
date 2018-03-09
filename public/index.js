@@ -1,6 +1,7 @@
 var slayer = require('slayer');
 var lpf = require('lpf');
 var KalmanFilter = require('kalmanjs').default;
+var dsp = require('dsp.js');
 
 var textArea = document.getElementById("textArea");
 var sendButton = document.getElementById("sendButton");
@@ -16,6 +17,11 @@ var yArrayData = [];
 var lpfArray = [];
 var qBegArray = []; //array of where Q begins
 var sEndArray = []; //array of where S ends
+var xyArraySpikes = [];
+var sNoiseArray = [];
+var shannArr = [];
+var newSNoiseArray = []; //array to get rid of adjacent S points and output only the middle one
+
 
 
 
@@ -71,7 +77,7 @@ global.changeDataShown = function(strUser) {
 
     });
     doSignalProcessing(strUser);
-    showPCG(strUser);
+    //showPCG(strUser);
 }
 
 function updateGraph(patientKey) {
@@ -293,6 +299,7 @@ function doSignalProcessing(patientName) {
                           drawGraph(dftArray[0], 4, "Discrete Fourier Transform Real");
                           drawGraph(dftArray[1], 5, "Discrete Fourier Transform Image");
 
+                          showPCG(patientName);
 
                           // input and output must be exactly the same length, must both have an even
                           // number of elements, and must both be Float32Arrays.
@@ -339,39 +346,149 @@ function showPCG(patientName) {
                                     x: time,
                                     y: parseFloat(lines[i])*1
                                 });
-                                //yArrayData.push(lines[i]*1);
+                                pcgYArrayData.push(parseFloat(lines[i])*1);
                                 time += 0.003;
                                 time = parseFloat(time.toFixed(3));
                             }
                             console.log('pcgArrayData');
                             console.log(pcgArrayData);
+
+
                             drawGraph(pcgArrayData, 6, "PCG");
 
-                            for (var i = 0; i < pcgArrayData.length; ++i) {
-                                pcgYArrayData.push(pcgArrayData[i].y);
-                            }
                             var input = new Float32Array([]);
                             input = pcgYArrayData;
                             console.log('pcgYArrayData');
                             console.log(pcgYArrayData);
                             var output = new Float32Array(input.length);
                             var dftArray = computeDft(input, output);
-                            drawGraph(dftArray[0], 7, "Discrete Fourier Transform Real");
-                            drawGraph(dftArray[1], 8, "Discrete Fourier Transform Image");
+                            //drawGraph(dftArray[0], 7, "Discrete Fourier Transform Real");
+                            //drawGraph(dftArray[0], 8, "Discrete Fourier Transform Image");
+
+/*--------*/
+                            var newArr = [];
+                            for (var i = 0; i < 8192; ++i) {
+                                newArr.push(pcgArrayData[i].y);
+                            }
+                            var dft = new dsp.DFT(8192, 334);
+                            //var fft = new FFT(2048, 44100);
+                            dft.forward(newArr);
+                            var spectrum = dft.spectrum;
+                            console.log('Spectrum');
+                            console.log(spectrum);
+                            console.log(newArr.length);
+
+
+
+                            //drawGraph(spectrum, 8, "Discrete Fourier Transform dsp.js");
+
+                            var fft = new dsp.FFT(8192, 334);
+                            //var fft = new FFT(2048, 44100);
+                            fft.forward(newArr);
+                            var spectrum2 = fft.spectrum;
+
+                            drawGraph(spectrum2, 9, "Fast Fourier Transform");
 
                             //Kalman filter
 
-                            console.log('chers');
-                            console.log(pcgYArrayData);
+
                             var kalmanFilter = new KalmanFilter({R: 5000, Q: 1000});
                             var dataConstantKalman = pcgYArrayData.map(function(v) {
                                 return kalmanFilter.filter(v);
                             });
                             var kalmanArray = dataConstantKalman;
-                            //console.log("Kalman");
-                            //console.log(kalmanArray);
-                            drawGraph(kalmanArray, 9, "Kalman Filter")
+                            drawGraph(kalmanArray, 7, "Kalman Filter")
 
+
+                            //computing Shannon energy
+                            for (var i = 0; i < kalmanArray.length; ++i) {
+                                var inp;
+                                if (Math.pow(kalmanArray[i], 2) == 0) {
+                                  inp = 0;
+                                }
+                                else {
+                                  inp = Math.pow(0-kalmanArray[i], 2) * Math.log(Math.pow(kalmanArray[i], 2)) / 1000000;
+                                }
+                                shannArr.push(inp);
+                            }
+                            console.log("SHANN");
+                            console.log(shannArr);
+
+
+                            var newArray = shannArr.slice();
+                            console.log("HERER");
+                            console.log(newArray);
+                            newArray.sort(function(a,b) { return a - b;});
+                            var newMax = [];
+                            for (var i = newArray.length - 1; newMax.length < xyArraySpikes.length; --i) {
+                              newMax.push(newArray[i]);
+                            }
+                            console.log(newMax);
+                            //computing average of S1s to have a threshold for the peak detection of s1 and s2 as 1/3 of the avg
+                            var sum = 0;
+                            for (var i = 0; i < newMax.length; ++i) {
+                              sum += newMax[i];
+                            }
+                            var avg = sum / newMax.length;
+                            var threshold = avg / 3;
+                            console.log(avg);
+                            console.log("THRESH")
+                            console.log(threshold)
+                            //array that keeps x coordinates of the noises over the specified threshold
+                            sNoiseArray = [];
+                            for (var i = 0; i < shannArr.length; ++i) {
+                                if (shannArr[i] >= threshold) {
+                                    sNoiseArray.push(i);
+                                }
+                            }
+                            console.log("SNoises");
+                            console.log(sNoiseArray);
+
+                            //cleaning up peaks within 0.05 seconds (they belong to the same peak)
+                            newSNoiseArray = [];
+
+                            for (var i = 0; i < sNoiseArray.length; ++i) {
+                              var tmpArray = [];
+                              tmpArray.push(sNoiseArray[i]);
+                              var index = i;
+                              var sNoiseToCompare = sNoiseArray[index];
+                              while (sNoiseArray[index+1] * 0.003 < ((sNoiseToCompare * 0.003) + 0.05)) {
+                                  console.log("IN HERE")
+                                  tmpArray.push(sNoiseArray[index + 1]);
+                                  sNoiseToCompare = sNoiseArray[index + 1];
+                                  ++index;
+                              }
+                              console.log(tmpArray.length);
+                              if (tmpArray.length != 1) {
+                                console.log(tmpArray[Math.round(tmpArray.length / 2)]);
+                                newSNoiseArray.push(tmpArray[Math.round(tmpArray.length / 2)]);
+                              }
+                              else {
+                                console.log(tmpArray[0]);
+                                newSNoiseArray.push(tmpArray[0]);
+                              }
+                              i += tmpArray.length;
+
+                            }
+                            console.log('newSNoiseArray');
+
+                            console.log(newSNoiseArray);
+                            //drawGraph(newSNoiseArray, 8, "Shannon Energy");
+
+                            drawGraph(shannArr, 8, "Shannon Energy");
+
+
+
+
+
+
+                            var filter = new dsp.IIRFilter(dsp.HIGHPASS, 150, 334);
+                            console.log(newArr);
+                            filter.process(newArr);
+                            console.log('HHHH');
+                            console.log(newArr);
+
+                            console.log(filter.spectrum);
                             lowPassFilter(2);
 
 
@@ -399,6 +516,7 @@ function featureExtraction() {
   .fromArray(xyArrayData)
   .then(spikes => {
         console.log('xyArray spikes');
+        xyArraySpikes = spikes;
         console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
         //taking the average no of peaks in 10 seconds over the 30 second time period
         var bpm = (spikes.length / 3) * 6;
@@ -695,8 +813,6 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
             time = parseFloat(time.toFixed(3));
         }
         else if (chartContainerNumber==6 || chartContainerNumber==7 || chartContainerNumber==8 || chartContainerNumber==9 || chartContainerNumber==10) { //PCG
-
-
             //console.log(arrayIn[i]);
             //console.log(parseFloat(arrayIn[i])/1000*1);
             if (chartContainerNumber==7 || chartContainerNumber==8 || chartContainerNumber==9 || chartContainerNumber==10) {
@@ -752,22 +868,29 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
           tickColor:"#FF0000",
           labelFontColor:"#FF0000",
       },
-      data: data  // random data
+      data: data
   });
   if(chartContainerNumber == 4 || chartContainerNumber == 5) {
-      chart.axisX.stripLines = null;
-      chart.axisY.stripLines = null;
+      chart.options.axisX.stripLines = [];
+      chart.options.axisY.stripLines = [];
   }
-  if(chartContainerNumber == 6) {
-      chart.axisX.stripLines = null;
-      chart.axisY.stripLines = null;
-      chart.axisY.title = "Amplitude (V)";
-      console.log('PCG myDataPoints:');
-      console.log(myDataPoints);
+  if (chartContainerNumber >= 6) {
+      chart.options.axisY.title = "Amplitude";
+      chart.options.axisX.stripLines = [];
+      chart.options.axisY.stripLines = [];
   }
-  if(chartContainerNumber == 7 || chartContainerNumber == 8) {
-      //console.log('Here:');
-      //console.log(myDataPoints);
+
+  //adding sNoises
+  if (chartContainerNumber == 8) {
+      console.log("Ya");
+      console.log(chart.options.data[0].dataPoints);
+      chart.options.axisY.title = "Energy Amplitude";
+      chart.options.axisX.stripLines = [];
+      chart.options.axisY.stripLines = [];
+      for (var i = 0; i < newSNoiseArray.length; ++i) {
+          var yIn = shannArr[newSNoiseArray[i]] / 1000;
+          chart.options.data[0].dataPoints[newSNoiseArray[i]] = { x: newSNoiseArray[i] * 0.003, y: yIn,  indexLabel: "S", markerType: "cross", markerColor: "red", markerSize: 5 };
+      }
   }
   chart.render();
 
@@ -782,4 +905,8 @@ function emptyArrays() {
     lpfArray = [];
     qBegArray = [];
     sEndArray = [];
+    xyArraySpikes = [];
+    sNoiseArray = [];
+    shannArr = [];
+    newSNoiseArray = [];
 }
