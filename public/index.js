@@ -284,25 +284,7 @@ function doSignalProcessing(patientName) {
                           console.log(kalmanArray);
                           drawGraph(kalmanArray, 3, "Kalman Filter")
 
-
-                          //Fourier transform
-
-                          // Input is 1+0i 2+0i 3+0i 4+0i
-                          var input = new Float32Array([]);
-                          input = yArrayData;
-                          console.log('Y ARRAY DATA');
-                          console.log(yArrayData);
-                          var output = new Float32Array(input.length);
-                          var dftArray = computeDft(input, output);
-                          console.log("Discrete Fourier");
-                          console.log(dftArray);
-                          drawGraph(dftArray[0], 4, "Discrete Fourier Transform Real");
-                          drawGraph(dftArray[1], 5, "Discrete Fourier Transform Image");
-
                           showPCG(patientName);
-
-                          // input and output must be exactly the same length, must both have an even
-                          // number of elements, and must both be Float32Arrays.
 
                       }
                   }
@@ -356,16 +338,7 @@ function showPCG(patientName) {
 
                             drawGraph(pcgArrayData, 6, "PCG");
 
-                            var input = new Float32Array([]);
-                            input = pcgYArrayData;
-                            console.log('pcgYArrayData');
-                            console.log(pcgYArrayData);
-                            var output = new Float32Array(input.length);
-                            var dftArray = computeDft(input, output);
-                            //drawGraph(dftArray[0], 7, "Discrete Fourier Transform Real");
-                            //drawGraph(dftArray[0], 8, "Discrete Fourier Transform Image");
 
-/*--------*/
                             var newArr = [];
                             for (var i = 0; i < 8192; ++i) {
                                 newArr.push(pcgArrayData[i].y);
@@ -380,7 +353,6 @@ function showPCG(patientName) {
 
 
 
-                            //drawGraph(spectrum, 8, "Discrete Fourier Transform dsp.js");
 
                             var fft = new dsp.FFT(8192, 334);
                             //var fft = new FFT(2048, 44100);
@@ -489,7 +461,7 @@ function showPCG(patientName) {
                             console.log(newArr);
 
                             console.log(filter.spectrum);
-                            lowPassFilter(2);
+                            //lowPassFilter(2);
 
 
                         }
@@ -612,11 +584,39 @@ function featureExtraction() {
         }
 
 
+        // PR AND ST segment
+        //https://www.mathsisfun.com/data/standard-deviation-formulas.html
+
 
         console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length * 10);
         document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) * 10 + " ms";
         var rrIntervalsDiff = (Math.max(...rrIntervalsArray) - Math.min(...rrIntervalsArray))*10;
         console.log('RR Max - Min: ' + rrIntervalsDiff);
+
+        //for SDNN
+        var avgRRInterval = rrIntervalsSum / rrIntervalsArray.length;
+        var newArr = [];
+        var newArrSum = 0;
+        for (var i = 0; i < rrIntervalsArray.length; ++i) {
+            newArrSum += Math.pow((rrIntervalsArray[i] - avgRRInterval), 2);
+        }
+        var newArrAvg = newArrSum / rrIntervalsArray.length;
+        var SDNNval = Math.sqrt(newArrAvg);
+        document.getElementById("SDNN").innerHTML = "SDNN: " + SDNNval.toFixed(2) + " ms";
+
+        //for RMSSD
+        var newArr2 = [];
+        var newArrSum2 = 0;
+        for (var i = 0; i < rrIntervalsArray.length - 1; ++i) {
+            newArrSum2 += Math.pow((rrIntervalsArray[i] - rrIntervalsArray[i+1]), 2);
+        }
+        var newArrAvg2 = newArrSum2 / rrIntervalsArray.length - 1;
+        var RMSSDval = Math.sqrt(newArrAvg2);
+        document.getElementById("RMSSD").innerHTML = "RMSSD: " + RMSSDval.toFixed(2) + " ms";
+
+
+
+
         document.getElementById("HRV").innerHTML = "Heart Rate Variability (difference between max and min NN): " + rrIntervalsDiff + " ms";
         console.log("QRS COMPLEX AVG: " + qrsIntervalsSum / spikes.length);
         document.getElementById("QRSComplexParagraph").innerHTML = "Q-R-S complex: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
@@ -891,6 +891,9 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
           var yIn = shannArr[newSNoiseArray[i]] / 1000;
           chart.options.data[0].dataPoints[newSNoiseArray[i]] = { x: newSNoiseArray[i] * 0.003, y: yIn,  indexLabel: "S", markerType: "cross", markerColor: "red", markerSize: 5 };
       }
+  }
+  if (chartContainerNumber == 9) {
+      chart.options.axisX.title = "Frequency";
   }
   chart.render();
 
