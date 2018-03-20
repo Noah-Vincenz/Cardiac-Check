@@ -17,10 +17,14 @@ var yArrayData = [];
 var lpfArray = [];
 var qBegArray = []; //array of where Q begins
 var sEndArray = []; //array of where S ends
+//var pEndArray = [];
+//var tBegArray = [];
 var xyArraySpikes = [];
 var sNoiseArray = [];
 var shannArr = [];
 var newSNoiseArray = []; //array to get rid of adjacent S points and output only the middle one
+var maxArray = [];
+
 
 
 
@@ -101,13 +105,6 @@ function updateGraph(patientKey) {
 
         // This can be downloaded directly:
         var xhr = new XMLHttpRequest();
-        /*
-        xhr.responseType = 'blob';
-        xhr.onload = function(event) {
-          var blob = xhr.response;
-          alert("sdsd");
-        };
-        */
         xhr.open('GET', url);
         xhr.responseType = 'text';
         xhr.send();
@@ -388,7 +385,6 @@ function showPCG(patientName) {
 
 
                             var newArray = shannArr.slice();
-                            console.log("HERER");
                             console.log(newArray);
                             newArray.sort(function(a,b) { return a - b;});
                             var newMax = [];
@@ -403,7 +399,6 @@ function showPCG(patientName) {
                             }
                             var avg = sum / newMax.length;
                             var threshold = avg / 3;
-                            console.log(avg);
                             console.log("THRESH")
                             console.log(threshold)
                             //array that keeps x coordinates of the noises over the specified threshold
@@ -425,18 +420,14 @@ function showPCG(patientName) {
                               var index = i;
                               var sNoiseToCompare = sNoiseArray[index];
                               while (sNoiseArray[index+1] * 0.003 < ((sNoiseToCompare * 0.003) + 0.05)) {
-                                  console.log("IN HERE")
                                   tmpArray.push(sNoiseArray[index + 1]);
                                   sNoiseToCompare = sNoiseArray[index + 1];
                                   ++index;
                               }
-                              console.log(tmpArray.length);
                               if (tmpArray.length != 1) {
-                                console.log(tmpArray[Math.round(tmpArray.length / 2)]);
                                 newSNoiseArray.push(tmpArray[Math.round(tmpArray.length / 2)]);
                               }
                               else {
-                                console.log(tmpArray[0]);
                                 newSNoiseArray.push(tmpArray[0]);
                               }
                               i += tmpArray.length;
@@ -445,7 +436,6 @@ function showPCG(patientName) {
                             console.log('newSNoiseArray');
 
                             console.log(newSNoiseArray);
-                            //drawGraph(newSNoiseArray, 8, "Shannon Energy");
 
                             drawGraph(shannArr, 8, "Shannon Energy");
 
@@ -457,11 +447,9 @@ function showPCG(patientName) {
                             var filter = new dsp.IIRFilter(dsp.HIGHPASS, 150, 334);
                             console.log(newArr);
                             filter.process(newArr);
-                            console.log('HHHH');
                             console.log(newArr);
 
                             console.log(filter.spectrum);
-                            //lowPassFilter(2);
 
 
                         }
@@ -494,133 +482,6 @@ function featureExtraction() {
         var bpm = (spikes.length / 3) * 6;
         console.log(bpm+'bpm');
         document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + bpm + "bpm";
-        var rrIntervalsSum = 0;
-        var rrIntervalsArray = [];
-        var qrsIntervalsSum = 0;
-        var qrsIntervalAvg;
-        var tmpTime;
-        for (var i = 0; i < spikes.length; ++i) {
-            if (i < spikes.length - 1) {
-                var newRRInterval = spikes[i+1].x - spikes[i].x;
-                rrIntervalsSum += newRRInterval;
-                rrIntervalsArray.push(newRRInterval);
-                tmpTime = spikes[i].x; //currently time of spike
-                var currentQBeg = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
-                    currentQBeg = xyArrayData[tmpTime-1];
-                    tmpTime -= 1;
-                }
-
-                //found local min Q, now need to find beginning of QRS interval
-                while (xyArrayData[tmpTime-1].y > currentQBeg.y + 0.02) {
-                    currentQBeg = xyArrayData[tmpTime-1];
-                    tmpTime -= 1;
-                }
-
-                tmpTime = spikes[i].x; //currently time of spike
-                var currentSEnd = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime+1].y < currentSEnd.y) {
-                    currentSEnd = xyArrayData[tmpTime+1];
-                    tmpTime += 1;
-                }
-
-                //found local min S, now need to find end of QRS interval
-                while (xyArrayData[tmpTime+1].y > currentSEnd.y + 0.02) {
-                    currentSEnd = xyArrayData[tmpTime+1];
-                    tmpTime += 1;
-                }
-
-
-                //console.log('Q: '+currentQBeg.x);
-                //console.log('S: '+currentSEnd.x);
-                //currentQBeg == Q
-                //currentSEnd == S
-                //console.log('q: ' + currentQBeg.x*1000);
-                //console.log('s: ' + currentSEnd.x*1000);
-                //console.log('QRS: ' + Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
-                qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
-                qBegArray.push(currentQBeg);
-                sEndArray.push(currentSEnd);
-
-            } else {
-
-                tmpTime = spikes[i].x; //currently time of spike
-                var currentQBeg = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
-                    currentQBeg = xyArrayData[tmpTime-1];
-                    tmpTime -= 1;
-                }
-                //found local min Q, now need to find beginning of QRS interval
-                while (xyArrayData[tmpTime-1].y > currentQBeg.y) {
-                    currentQBeg = xyArrayData[tmpTime-1];
-                    tmpTime -= 1;
-                }
-
-
-                tmpTime = spikes[i].x; //currently time of spike
-                var currentSEnd = xyArrayData[tmpTime];
-                while (xyArrayData[tmpTime+1].y < currentSEnd.y) {
-                    currentSEnd = xyArrayData[tmpTime+1];
-                    tmpTime += 1;
-                }
-                //found local min S, now need to find end of QRS interval
-                while (xyArrayData[tmpTime+1].y > currentSEnd.y + 0.02) {
-                    currentSEnd = xyArrayData[tmpTime+1];
-                    tmpTime += 1;
-                }
-
-                //console.log('Q: '+currentQBeg.x);
-                //console.log('S: '+currentSEnd.x);
-                //currentQBeg == Q
-                //currentSEnd == S
-                //console.log('q: ' + currentQBeg.x*1000);
-                //console.log('s: ' + currentSEnd.x*1000);
-                //console.log('QRS: ' + Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
-                //console.log('QRS: '+ Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
-                qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
-                qBegArray.push(currentQBeg);
-                sEndArray.push(currentSEnd);
-            }
-        }
-
-
-        // PR AND ST segment
-        //https://www.mathsisfun.com/data/standard-deviation-formulas.html
-
-
-        console.log("RR INTERVAL AVG: " + rrIntervalsSum / spikes.length * 10);
-        document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(rrIntervalsSum / spikes.length) * 10 + " ms";
-        var rrIntervalsDiff = (Math.max(...rrIntervalsArray) - Math.min(...rrIntervalsArray))*10;
-        console.log('RR Max - Min: ' + rrIntervalsDiff);
-
-        //for SDNN
-        var avgRRInterval = rrIntervalsSum / rrIntervalsArray.length;
-        var newArr = [];
-        var newArrSum = 0;
-        for (var i = 0; i < rrIntervalsArray.length; ++i) {
-            newArrSum += Math.pow((rrIntervalsArray[i] - avgRRInterval), 2);
-        }
-        var newArrAvg = newArrSum / rrIntervalsArray.length;
-        var SDNNval = Math.sqrt(newArrAvg);
-        document.getElementById("SDNN").innerHTML = "SDNN: " + SDNNval.toFixed(2) + " ms";
-
-        //for RMSSD
-        var newArr2 = [];
-        var newArrSum2 = 0;
-        for (var i = 0; i < rrIntervalsArray.length - 1; ++i) {
-            newArrSum2 += Math.pow((rrIntervalsArray[i] - rrIntervalsArray[i+1]), 2);
-        }
-        var newArrAvg2 = newArrSum2 / rrIntervalsArray.length - 1;
-        var RMSSDval = Math.sqrt(newArrAvg2);
-        document.getElementById("RMSSD").innerHTML = "RMSSD: " + RMSSDval.toFixed(2) + " ms";
-
-
-
-
-        document.getElementById("HRV").innerHTML = "Heart Rate Variability (difference between max and min NN): " + rrIntervalsDiff + " ms";
-        console.log("QRS COMPLEX AVG: " + qrsIntervalsSum / spikes.length);
-        document.getElementById("QRSComplexParagraph").innerHTML = "Q-R-S complex: " + Math.round(qrsIntervalsSum / spikes.length) + " ms";
-
         doTDetection();
 
 
@@ -631,14 +492,8 @@ function doTDetection() {
   //T detection from sArray for ST interval, QT
   var sArray = [];
   var tArray = [];
-  var maxArray = [];
-  /*
-  sl = slayer();
-  sl.fromArray(lpfArray).then(spikes => {
-        console.log('lpf spikes');
-        console.log(spikes);    // [ { x: 4, y: 12 }, { x: 12, y: 25 } ]
-  });
-  */
+  maxArray = [];
+
   for (var i = 1; i < lpfArray.length - 2; ++i) {
       //var currentMax = lpfArray[0];
       var currentIndex = 0;
@@ -653,27 +508,101 @@ function doTDetection() {
 
 
   }
+  //cleaning up array so that the last and first maxima are not used
+
+  //getting first 3 elements of maxArray
+  var arrFirstThree = [];
+  for (var i = 0; i < 3; ++i) {
+    arrFirstThree[i] = xyArrayData[maxArray[i].x].y;
+  }
+
+
+  var arrLastThree = [];
+
+  arrLastThree[0] = xyArrayData[maxArray[maxArray.length - 3].x].y;
+  arrLastThree[1] = xyArrayData[maxArray[maxArray.length - 2].x].y;
+  arrLastThree[2] = xyArrayData[maxArray[maxArray.length - 1].x].y;
+  if (Math.max(...arrFirstThree) == arrFirstThree[0]) {
+
+    //first max is an R
+    if (Math.max(...arrLastThree) == arrLastThree[0]) {
+      maxArray.splice(0, 2);
+      maxArray.splice(maxArray.length - 1, 1);
+    } else if (Math.max(...arrLastThree) == arrLastThree[1]) {
+      maxArray.splice(0, 2);
+      maxArray.splice(maxArray.length - 3, 3);
+    } else {
+      maxArray.splice(0, 2);
+      maxArray.splice(maxArray.length - 2, 2);
+    }
+
+  } else if (Math.max(...arrFirstThree) == arrFirstThree[1]) {
+
+    //first max is a P
+    if (Math.max(...arrLastThree) == arrLastThree[0]) {
+      maxArray.splice(0, 3);
+      maxArray.splice(maxArray.length - 1, 1);
+    } else if (Math.max(...arrLastThree) == arrLastThree[1]) {
+      maxArray.splice(0, 3);
+      maxArray.splice(maxArray.length - 3, 3);
+
+    } else {
+      maxArray.splice(0, 3);
+      maxArray.splice(maxArray.length - 2, 2);
+    }
+  } else {
+
+    //first max is a T
+    if (Math.max(...arrLastThree) == arrLastThree[0]) {
+      maxArray.splice(0, 1);
+      maxArray.splice(maxArray.length - 1, 1);
+    } else if (Math.max(...arrLastThree) == arrLastThree[1]) {
+      maxArray.splice(0, 1);
+      maxArray.splice(maxArray.length - 3, 3);
+    } else {
+      maxArray.splice(0, 1);
+      maxArray.splice(maxArray.length - 2, 2);
+    }
+  }
+
+
+
+
   console.log('maxArray');
   console.log(maxArray);
   var pBegArray = [];
   var tEndArray = [];
+  var rPeaks = [];
+
+
   for (var i = 0; i < maxArray.length; ++i) { //0 is P, 1, R, 2 is T
-      //console.log('1');
       if (i%3 == 0) {
           //maximum is a P
           //do PR Interval using qBegArray and xyArray - this works only because lpfArray shifts the P peaks to the right of where they are in original data
 
 
-          //need to go all the way up to the peak of P first as the data is fetched from lpfArray peaks, which are shifted to the right of the original peaks
+          //this is for Pend detection
+          /*
           var tmpTime = maxArray[i].x;
+          var currentSmallest = xyArrayData[tmpTime];
+          while(currentSmallest.y > xyArrayData[tmpTime+1].y + 0.01) {
+              currentSmallest = xyArrayData[tmpTime+1];
+              tmpTime += 1;
+          }
+          pEndArray.push(currentSmallest.x);
+          */
+
+
+          //this is for Pbeg detection
+          //need to go all the way up to the peak of P first as the data is fetched from lpfArray peaks, which are shifted to the right of the original peaks
+          tmpTime = maxArray[i].x;
           var currentLargest = xyArrayData[tmpTime];
           while(currentLargest.y <= xyArrayData[tmpTime-1].y) {
               currentLargest = xyArrayData[tmpTime-1];
               tmpTime -= 1;
           }
-
           //now we can move left from the peak in order to find the beginning of P
-          var currentSmallest = currentLargest;
+          currentSmallest = currentLargest;
           while(currentSmallest.y > xyArrayData[tmpTime-1].y + 0.01) {
               currentSmallest = xyArrayData[tmpTime-1];
               tmpTime -= 1;
@@ -681,19 +610,137 @@ function doTDetection() {
           }
 
           pBegArray.push(currentSmallest.x);
-      } else if (i%3 == 2) { //i%2==0
+      } else if (i%3 == 2) {
           //maximum is a T
+
+
+          //this is for tBeg detection
+          /*
           var tmpTime = maxArray[i].x;
-          var currentSmallest = xyArrayData[tmpTime];
+          var currentLargest = xyArrayData[tmpTime];
+          while(currentLargest.y <= xyArrayData[tmpTime-1].y) {
+              currentLargest = xyArrayData[tmpTime-1];
+              tmpTime -= 1;
+          }
+          //now we can move left from the peak in order to find the beginning of T
+          var currentSmallest = currentLargest;
+          while(currentSmallest.y > xyArrayData[tmpTime-1].y + 0.01) {
+              currentSmallest = xyArrayData[tmpTime-1];
+              tmpTime -= 1;
+          }
+          tBegArray.push(currentSmallest.x)
+          */
+
+          //this is for tEnd detection
+          tmpTime = maxArray[i].x;
+          currentSmallest = xyArrayData[tmpTime];
           while(currentSmallest.y > xyArrayData[tmpTime+1].y + 0.01) {
               currentSmallest = xyArrayData[tmpTime+1];
               tmpTime += 1;
-              //console.log('dsfs');
           }
           tEndArray.push(currentSmallest.x);
 
       }
+      else {
+        //maximum is an R
+        tmpTime = maxArray[i].x;
+        var currentLargest = xyArrayData[tmpTime];
+        while(currentLargest.y <= xyArrayData[tmpTime-1].y) {
+            currentLargest = xyArrayData[tmpTime-1];
+            tmpTime -= 1;
+        }
+        rPeaks.push(currentLargest.x);
+
+
+      }
   }
+  //doing qBeg and sEnd detection for QRS complex and RRInterval detection
+  var rrIntervalsSum = 0;
+  var rrIntervalsArray = [];
+  var qrsIntervalsSum = 0;
+  var qrsIntervalAvg;
+  var tmpTime;
+  console.log("rPeaks");
+  console.log(rPeaks);
+  for (var i = 0; i < rPeaks.length; ++i) {
+
+      if (i < rPeaks.length - 1) {
+          var newRRInterval = rPeaks[i+1] - rPeaks[i];
+          rrIntervalsSum += newRRInterval;
+          rrIntervalsArray.push(newRRInterval);
+      }
+      tmpTime = Math.round(rPeaks[i] * 100); //currently time of spike
+
+      var currentQBeg = xyArrayData[tmpTime];
+      while (xyArrayData[tmpTime-1].y < currentQBeg.y) {
+
+          currentQBeg = xyArrayData[tmpTime-1];
+          tmpTime -= 1;
+      }
+
+      //found local min Q, now need to find beginning of QRS interval
+      while (xyArrayData[tmpTime-1].y > currentQBeg.y + 0.02) {
+          currentQBeg = xyArrayData[tmpTime-1];
+          tmpTime -= 1;
+      }
+
+      tmpTime =  Math.round(rPeaks[i] * 100); //currently time of spike
+      var currentSEnd = xyArrayData[tmpTime];
+      while (xyArrayData[tmpTime+1].y < currentSEnd.y) {
+          currentSEnd = xyArrayData[tmpTime+1];
+          tmpTime += 1;
+      }
+
+      //found local min S, now need to find end of QRS interval
+      while (xyArrayData[tmpTime+1].y > currentSEnd.y + 0.02) {
+          currentSEnd = xyArrayData[tmpTime+1];
+          tmpTime += 1;
+      }
+      console.log("sEND: " + currentSEnd.x);
+      console.log("qBEG: " + currentQBeg.x);
+      console.log(Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
+      qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
+      qBegArray.push(currentQBeg);
+      sEndArray.push(currentSEnd);
+
+  }
+
+  var avgRRInterval = rrIntervalsSum / rrIntervalsArray.length;
+  console.log("RR INTERVAL AVG: " + avgRRInterval * 1000);
+  document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(avgRRInterval * 1000) + " ms";
+  var rrIntervalsDiff = (Math.max(...rrIntervalsArray) - Math.min(...rrIntervalsArray))*1000;
+  console.log('RR Max - Min: ' + rrIntervalsDiff);
+  document.getElementById("HRV").innerHTML = "Heart Rate Variability (difference between max and min NN): " + Math.round(rrIntervalsDiff) + " ms";
+
+
+  //for SDNN
+  var newArr = [];
+  var newArrSum = 0;
+  for (var i = 0; i < rrIntervalsArray.length; ++i) {
+      newArrSum += Math.pow((rrIntervalsArray[i]*1000 - avgRRInterval*1000), 2);
+  }
+  var newArrAvg = newArrSum / rrIntervalsArray.length;
+  var SDNNval = Math.sqrt(newArrAvg);
+  document.getElementById("SDNN").innerHTML = "SDNN: " + Math.round(SDNNval) + " ms";
+
+  //for RMSSD
+  var newArr2 = [];
+  var newArrSum2 = 0;
+  for (var i = 0; i < rrIntervalsArray.length - 1; ++i) {
+      newArrSum2 += Math.pow((rrIntervalsArray[i]*1000 - rrIntervalsArray[i+1]*1000), 2);
+  }
+  var newArrAvg2 = newArrSum2 / rrIntervalsArray.length - 1;
+  var RMSSDval = Math.sqrt(newArrAvg2);
+  document.getElementById("RMSSD").innerHTML = "RMSSD: " + Math.round(RMSSDval) + " ms";
+
+
+
+
+  console.log("QRS COMPLEX AVG: " + qrsIntervalsSum / rPeaks.length);
+  document.getElementById("QRSComplexParagraph").innerHTML = "Q-R-S complex: " + Math.round(qrsIntervalsSum / rPeaks.length) + " ms";
+
+
+
   console.log('pBegArray: ');
   console.log(pBegArray);
   console.log('tEndArray: ');
@@ -701,41 +748,46 @@ function doTDetection() {
   var prIntervalsSum = 0;
   var qtIntervalsSum = 0;
   var stIntervalsSum = 0;
+  var prSegmentsSum = 0;
+  var stSegmentsSum = 0;
   for (var i = 0; i < qBegArray.length; ++i) {
       prIntervalsSum += (qBegArray[i].x - pBegArray[i]).toFixed(3) * 1;
-      //var x = (qBegArray[i].x - pBegArray[i]).toFixed(3) * 1;
-      //console.log('P: ' + pBegArray[i]);
-      //console.log('R: ' + qBegArray[i].x);
-      //console.log('PR: '+x);
   }
   for (var i = 0; i < tEndArray.length; ++i) {
-      //var x = (tEndArray[i] - qBegArray[i].x).toFixed(3) * 1;
-      //console.log('QT: '+x);
       qtIntervalsSum += (tEndArray[i] - qBegArray[i].x).toFixed(3) * 1;
-      //var x =  (tEndArray[i] - sEndArray[i].x).toFixed(3) * 1;
-      //console.log('S: '+sEndArray[i].x);
-      //console.log('T: '+tEndArray[i]);
-      //console.log('ST: '+x);
       stIntervalsSum += (tEndArray[i] - sEndArray[i].x).toFixed(3) * 1;
-
   }
+  /*
+  for (var i = 0; i < pEndArray.length; ++i) {
+      prSegmentsSum += (qBegArray[i].x - pEndArray[i]).toFixed(3) * 1;
+  }
+  for (var i = 0; i < tBegArray.length; ++i) {
+      stSegmentsSum += (tBegArray[i] - sEndArray[i].x).toFixed(3) * 1;
+  }
+  */
+
   var prIntervalsAvg = (prIntervalsSum / qBegArray.length).toFixed(3) * 1000;
   var qtIntervalsAvg = Math.round(qtIntervalsSum / qBegArray.length * 1000);
   var stIntervalsAvg = Math.round(stIntervalsSum / tEndArray.length * 1000);
+  //var prSegmentsAvg = Math.round(prSegmentsSum / pEndArray.length * 1000);
+  //var stSegmentsAvg = Math.round(stSegmentsSum / tBegArray.length * 1000);
+
+
   console.log('prIntervalsAvg');
   console.log(prIntervalsAvg);
   console.log('qtIntervalsAvg');
   console.log(qtIntervalsAvg);
   console.log('stIntervalsAvg');
   console.log(stIntervalsAvg);
+  //console.log('stSegmentsAvg');
+  //console.log(stSegmentsAvg);
+  //console.log('prSegmentsAvg');
+  //console.log(prSegmentsAvg);
   document.getElementById("PRIntervalParagraph").innerHTML = "P-R interval: " + prIntervalsAvg + " ms";
   document.getElementById("QTIntervalParagraph").innerHTML = "Q-T interval: " + qtIntervalsAvg + " ms";
   document.getElementById("STIntervalParagraph").innerHTML = "S-T interval: " + stIntervalsAvg + " ms";
-
-  //TODO: add PR and ST segments!!
-
-
-
+  //document.getElementById("STSegmentParagraph").innerHTML = "S-T segment: " + stSegmentsAvg + " ms";
+  //document.getElementById("PRSegmentParagraph").innerHTML = "P-R segment: " + prSegmentsAvg + " ms";
 }
 
 function lowPassFilter(signalType) {
@@ -764,39 +816,7 @@ function lowPassFilter(signalType) {
 }
 
 
-
-/*
- * Nayuki DFT: https://www.nayuki.io/res/how-to-implement-the-discrete-fourier-transform/dft.js
- * Computes the discrete Fourier transform (DFT) of the given complex vector.
- * 'inreal' and 'inimag' are each an array of n floating-point numbers.
- * Returns an array of two arrays - outreal and outimag, each of length n.
- */
-function computeDft(inreal, inimag) {
-	var n = inreal.length;
-	var outreal = new Array(n);
-	var outimag = new Array(n);
-	for (var k = 0; k < n; k++) {  // For each output element
-		var sumreal = 0;
-		var sumimag = 0;
-		for (var t = 0; t < n; t++) {  // For each input element
-			var angle = 2 * Math.PI * t * k / n;
-			sumreal +=  inreal[t] * Math.cos(angle) + inimag[t] * Math.sin(angle);
-			sumimag += -inreal[t] * Math.sin(angle) + inimag[t] * Math.cos(angle);
-		}
-		outreal[k] = sumreal;
-		outimag[k] = sumimag;
-	}
-	return [outreal, outimag];
-}
-
-
 function drawGraph(arrayIn, chartContainerNumber, titleIn) {
-  if (chartContainerNumber==7 || chartContainerNumber==8) {
-    console.log('arrayIn');
-    console.log(arrayIn);
-    console.log(arrayIn[0]);
-    console.log(arrayIn[1]);
-  }
   var limit = 100000;    //increase number of dataPoints by increasing the limit
   var y = 0;
   var data = [];
@@ -813,8 +833,7 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
             time = parseFloat(time.toFixed(3));
         }
         else if (chartContainerNumber==6 || chartContainerNumber==7 || chartContainerNumber==8 || chartContainerNumber==9 || chartContainerNumber==10) { //PCG
-            //console.log(arrayIn[i]);
-            //console.log(parseFloat(arrayIn[i])/1000*1);
+
             if (chartContainerNumber==7 || chartContainerNumber==8 || chartContainerNumber==9 || chartContainerNumber==10) {
               myDataPoints.push({
                   x: time,
@@ -912,4 +931,7 @@ function emptyArrays() {
     sNoiseArray = [];
     shannArr = [];
     newSNoiseArray = [];
+    //tBegArray = [];
+    //pEndArray = [];
+    maxArray = [];
 }
