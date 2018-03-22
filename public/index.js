@@ -2,8 +2,7 @@
  * @author Noah-Vincenz Noeh <noah-vincenz.noeh@kcl.ac.uk>
  */
 
- //imported libraries
-var slayer = require('slayer'); //library for peak detection
+//imported libraries
 var lpf = require('lpf'); //library for low-pass filtering
 var KalmanFilter = require('kalmanjs').default; //library for kalman filtering
 var dsp = require('dsp.js'); //library for digital signal processing
@@ -138,10 +137,12 @@ function updateGraphs(patientKey) {
                     //ECG heart rate calculation
                     heartRateCalculation();
 
-                    drawGraph(yArrayData, 1, "ECG");
-
                     //low pass filter
                     drawGraph(lowPassFilter(yArrayData), 2, "Low Pass Filter");
+
+                    ECGSignalProcessing();
+
+                    drawGraph(yArrayData, 1, "ECG");
 
                     //Kalman filter
                     drawGraph(kalmanFilter(yArrayData, 0.01, 3), 3, "Kalman Filter");
@@ -366,26 +367,92 @@ function showPCG(patientKey) {
 }
 
 /**
- * Calculate the patient's heartrate using the slayer external library.
+ * Calculate the patient's heartrate.
  */
 function heartRateCalculation() {
-  //peak detection & bpm for raw ECG
-  var sl = slayer();
-  //otherwise there is too many spikes detected in the raw ECG data for patient3
-  sl.config.minPeakDistance = 40;
-  sl
-  .y(item => item.y)
-  .fromArray(xyArrayData)
-  .then(spikes => {
-        console.log('xyArray spikes');
-        xyArraySpikes = spikes;
-        console.log(spikes);
-        //taking the average no of peaks in 10 seconds over the 30 second time period
-        var bpm = (spikes.length / 3) * 6;
-        console.log(bpm+'bpm');
-        document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + bpm + "bpm";
-        ECGSignalProcessing();
-  });
+    //peak detection & bpm for raw ECG
+
+    //making a copy of yArrayData array
+    var newArr = yArrayData.slice()
+
+    var arrayOfMaxes = []
+    var sum = 0
+    //retrieving the 15 largest y values in the data array
+    for (var i = 0; i < 15; ++i) {
+        var max = Math.max(...newArr)
+        arrayOfMaxes.push(max)
+        sum += max
+        var indexOfMax = newArr.indexOf(max)
+        if (indexOfMax > -1) {
+            newArr.splice(indexOfMax, 1)
+        }
+    }
+
+    //taking the average of all values in the array of maxima
+    var avg = sum / arrayOfMaxes.length
+    var squareOfAvg = avg * avg
+    //threshold above which R peaks should be detected: 1/3 of the square of the average
+    var threshold = squareOfAvg / 3
+
+    //array containing the square of the signal
+    var squaredArray = []
+    for (var i = 0; i < xyArrayData.length; ++i) {
+        if (xyArrayData[i].y > 0) { //otherwise negative values over 1 get added, as the square of a negative becomes positive
+            squaredArray.push({
+                x: xyArrayData[i].x,
+                y: xyArrayData[i].y * xyArrayData[i].y
+            })
+        }
+    }
+
+    var arrayOfValuesGreaterThanThreshold = []
+    for (var i = 0; i < squaredArray.length; ++i) {
+        var val = squaredArray[i].y
+        if (val > threshold) {
+            arrayOfValuesGreaterThanThreshold.push({
+                x: (squaredArray[i].x.toFixed(2))/1, // dividing by 1 otherwise strings will be stored
+                y: val.toFixed(3)/1
+            })
+        }
+    }
+
+    //now need to get rid of the values that belong to the same R peak but are not the maximum of that peak
+    var maximaArray = []
+    var i = 0
+    while (i <= arrayOfValuesGreaterThanThreshold.length - 1) {
+        var tmpArray = []
+        tmpArray.push(arrayOfValuesGreaterThanThreshold[i])
+        var index = i
+
+        while (index < arrayOfValuesGreaterThanThreshold.length - 1 && arrayOfValuesGreaterThanThreshold[index+1].x == (arrayOfValuesGreaterThanThreshold[index].x + 0.01).toFixed(2) && arrayOfValuesGreaterThanThreshold[index+1].y >= arrayOfValuesGreaterThanThreshold[index].y) {
+            tmpArray.push(arrayOfValuesGreaterThanThreshold[index+1])
+            index += 1
+        }
+
+
+        maximaArray.push({
+            x: arrayOfValuesGreaterThanThreshold[index].x,
+            y: Math.sqrt(arrayOfValuesGreaterThanThreshold[index].y)
+        })
+
+        while (index < arrayOfValuesGreaterThanThreshold.length - 1 && arrayOfValuesGreaterThanThreshold[index+1].x == (arrayOfValuesGreaterThanThreshold[index].x + 0.01).toFixed(2) && arrayOfValuesGreaterThanThreshold[index+1].y <= arrayOfValuesGreaterThanThreshold[index].y) {
+            tmpArray.push(arrayOfValuesGreaterThanThreshold[index+1])
+            index += 1
+        }
+
+
+        //now we are at the next S peak and want to go up from there again -> so go forward in outer for loop
+        i += tmpArray.length
+    }
+
+    xyArraySpikes = maximaArray
+    console.log('xyArray spikes');
+    console.log(xyArraySpikes);
+    //beats per minute can now be calculated using the number of peaks in the 30 second period
+    var bpm = (maximaArray.length / 3 * 6)
+    console.log(bpm+'bpm');
+    document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + bpm + "bpm";
+
 }
 
 /**
