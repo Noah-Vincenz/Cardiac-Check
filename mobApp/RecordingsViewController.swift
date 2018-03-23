@@ -20,7 +20,8 @@ class RecordingsViewController: UIViewController {
     
     var months: [Double]!
     var patientName: String = ""
-    
+    var messagesArray: [(String, String)] = []
+
     let databaseRef = Database.database().reference()
     // Create a storage reference from our storage service
     let storageRef = Storage.storage().reference()
@@ -28,77 +29,10 @@ class RecordingsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        //pass in the patientname from the previous view
-        
-        setPatientName()
+        getPatientName()
         doGraphs()
     }
-    
-    func setPatientName() {
-        let patientRef = databaseRef.child("patients").child("patient1")
-        patientRef.observe(DataEventType.value, with: { (snapshot) in
-            
-            //if the reference has some values (keys in this case)
-            if snapshot.childrenCount > 0 {
-                
-                //iterating through all the keys of the patient, ie. name, dob, id, weight
-                for attribute in snapshot.children.allObjects as! [DataSnapshot] {
-                    //getting value
-                    if attribute.key == "name" {
-                        self.patientName = attribute.value! as! String
-                    }
-                    
-                }
-            }
-        })
-    }
-    
-    func matches(for regex: String, in text: String) -> [String] {
-        
-        do {
-            let regex = try NSRegularExpression(pattern: regex)
-            let results = regex.matches(in: text,
-                                        range: NSRange(text.startIndex..., in: text))
-            return results.map {
-                String(text[Range($0.range, in: text)!])
-            }
-        } catch let error {
-            print("invalid regex: \(error.localizedDescription)")
-            return []
-        }
-    }
-    
-    func retrieveMessages() {
-        let messagesRef = databaseRef.child("messages")
-        messagesRef.observe(DataEventType.value, with: { (snapshot) in
-            
-            //if the reference has some values (keys in this case)
-            if snapshot.childrenCount > 0 {
-                
-                let messageRegex = self.patientName + ".*"
-                let regex = try! NSRegularExpression(pattern: messageRegex, options: [])
-                
-                //iterating through all the keys of the patient, ie. name, dob, id, weight
-                for messageID in snapshot.children.allObjects as! [DataSnapshot] {
-                    //getting value
-                    
-                    let str = messageID.key
-                    let isMatch = regex.firstMatch(in: messageID.key, options: [], range: NSMakeRange(0, str.utf16.count)) != nil
-                    if isMatch == true {
-                        //this is a message for the current patient
-                        var arr = [(String, String)]() //array containing pairs of date and message content
-                        
-                        //retrieves the date of the message
-                        let matched = self.matches(for: "\\d\\d?-\\d\\d?-\\d\\d\\d\\d", in: str)
-                        
-                        arr.append((matched[0], messageID.value as! String))
-                        
-                    }
-                    
-                }
-            }
-        })
-    }
+
     
     
     
@@ -201,7 +135,6 @@ class RecordingsViewController: UIViewController {
         //beats per minute can now be calculated using the number of peaks in the 30 second period
         let bpm = (maxArray.count / 3 * 6)
         heartRateLabel.text = "Heart Rate = " + String(bpm) + " bpm"
-        print(maxArray)
     }
     
 
@@ -252,8 +185,92 @@ class RecordingsViewController: UIViewController {
         
     }
     
+    func getPatientName() {
+        let patientRef = databaseRef.child("patients").child("patient1")
+        patientRef.observe(DataEventType.value, with: { (snapshot) in
+            
+            //if the reference has some values (keys in this case)
+            if snapshot.childrenCount > 0 {
+                
+                print("YEA")
+                //iterating through all the keys of the patient, ie. name, dob, id, weight
+                for attribute in snapshot.children.allObjects as! [DataSnapshot] {
+                    //getting value
+                    if attribute.key == "name" {
+                        // must be called here as fetching the name takes longer than this function returning
+                        self.patientName = attribute.value! as! String
+                        self.retrieveMessages(name: attribute.value! as! String)
+                    }
+                    
+                }
+            }
+        })
+    }
+    
+    
+    func retrieveMessages(name: String) {
+        print(name)
+        let messagesRef = databaseRef.child("messages")
+        var arr = [(String, String)] ()
+        messagesRef.observe(DataEventType.value, with: { (snapshot) in
+            
+            //if the reference has some values (keys in this case)
+            if snapshot.childrenCount > 0 {
+                
+                let messageRegex = name + ".*"
+                let regex = try! NSRegularExpression(pattern: messageRegex, options: [])
+                
+                //iterating through all the keys of the patient, ie. name, dob, id, weight
+                for messageID in snapshot.children.allObjects as! [DataSnapshot] {
+                    //getting value
+                    
+                    let str = messageID.key
+                    let isMatch = regex.firstMatch(in: messageID.key, options: [], range: NSMakeRange(0, str.utf16.count)) != nil
+                    if isMatch == true {
+                        //this is a message for the current patient
+                        
+                        //retrieves the date of the message
+                        let matched = self.matches(for: "\\d\\d?-\\d\\d?-\\d\\d\\d\\d", in: str)
+                        
+                        //must be done here as function runs synch. meaning that this func finishes before the inner loop computation finishes, hence array would be empty otherwise
+                        self.messagesArray.append((matched[0], messageID.value as! String))
+                        
+                    }
+                    
+                }
+            }
+        })
+    }
+    
+    func matches(for regex: String, in text: String) -> [String] {
+        
+        do {
+            let regex = try NSRegularExpression(pattern: regex)
+            let results = regex.matches(in: text,
+                                        range: NSRange(text.startIndex..., in: text))
+            return results.map {
+                String(text[Range($0.range, in: text)!])
+            }
+        } catch let error {
+            print("invalid regex: \(error.localizedDescription)")
+            return []
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if (segue.identifier == "segueToMessages"){
+            let destinationVC = segue.destination as! MessagesViewController
+            destinationVC.messagesArray = self.messagesArray
+            destinationVC.patientName = self.patientName
+            print(destinationVC.messagesArray)
+        }
+    }
+    
+    
     
 }
+
+
 
 extension Array where Element: FloatingPoint {
     /// Returns the sum of all elements in the array
