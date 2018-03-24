@@ -11,19 +11,66 @@ import UIKit
 import Firebase
 import FirebaseDatabase
 
+/**
+ 
+ This class controls the messages view. It also enables the user to reload the messages in case a clinician has just sent a new message. This will automatically update the table view containing the messages.
+ 
+ */
 class MessagesViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
+    // MARK: - Outlets and variables
     
     @IBOutlet weak var tableView: UITableView!
     var messagesArray = [(String, String)]()
     var patientName: String = ""
     let databaseRef = Database.database().reference()
     
-    @IBAction func reloadButtonPressed(_ sender: Any) {
-        reloadMessages()
+    
+    // MARK: - Parent methods
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return messagesArray.count
+    }
+    
+    //Creating cells for each message
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell(style: UITableViewCellStyle.default, reuseIdentifier: "cell")
+        cell.textLabel?.text = messagesArray[indexPath.row].0 + ": " + messagesArray[indexPath.row].1
+        //making sure that messages with longer text are not in single lined cells
+        cell.textLabel?.numberOfLines = 0
+        return cell
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view, typically from a nib.
+        
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
     }
     
     
+    // MARK: - Reloading messages
+    
+    /**
+     
+     This function is called when the reload button is called and it calls the reloadMessages function.
+     
+     parameter sender: The reload UIBarButtonItem.
+     
+     */
+    @IBAction func reloadButtonPressed(_ sender: UIBarButtonItem) {
+        reloadMessages()
+    }
+    
+    /**
+     
+     This function reloads the messages from the Firebase database using the patient name as a reference.
+     
+     */
     func reloadMessages() {
         self.messagesArray.removeAll()
         let messagesRef = databaseRef.child("messages")
@@ -64,6 +111,15 @@ class MessagesViewController: UIViewController, UITableViewDelegate, UITableView
         })
     }
     
+    /**
+     
+     This function is used to return substrings within a string that match a specific regular expression.
+     
+     - parameter regEx: The regular expression used to check against the string.
+     - parameter inputText: The string that this regular expression is checked against.
+     - returns: The array of all the substrings that match the regular expression.
+     
+     */
     func matches(for regex: String, in text: String) -> [String] {
         
         do {
@@ -78,29 +134,4 @@ class MessagesViewController: UIViewController, UITableViewDelegate, UITableView
             return []
         }
     }
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return messagesArray.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: UITableViewCellStyle.default, reuseIdentifier: "cell")
-        cell.textLabel?.text = messagesArray[indexPath.row].0 + ": " + messagesArray[indexPath.row].1
-        cell.textLabel?.numberOfLines = 0
-        return cell
-    }
-    
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
-    
 }
