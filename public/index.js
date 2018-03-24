@@ -35,6 +35,7 @@ const db = firebase.database();
 const patientsRef = db.ref("patients");
 const storage = firebase.storage();
 
+
 /**
  * This function gets called when the window first loads. It changes the data that is currently shown to show the data of the patient 'Henry'
  */
