@@ -7,6 +7,9 @@
 //
 
 import XCTest
+import Firebase
+import FirebaseAuth
+@testable import mobApp
 
 class LoginViewControllerTests: XCTestCase {
     
@@ -25,11 +28,18 @@ class LoginViewControllerTests: XCTestCase {
         // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
     
-    func testPerformanceExample() {
+    func testLoginPerformance() {
         // This is an example of a performance test case.
+        let viewController = LoginViewController()
+        viewController.userNameTextField = UITextField()
+        viewController.passwordTextField = UITextField()
+        viewController.userNameTextField.text = "patient1@mobapp.com"
+        viewController.passwordTextField.text = "patient1"
         self.measure {
             // Put the code you want to measure the time of here.
+            for _ in 0...1000 {
+                viewController.loginButtonPressed(viewController.loginButton)
+            }
         }
     }
-    
 }

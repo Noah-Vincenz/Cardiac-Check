@@ -1,5 +1,5 @@
 //
-//  LoginViewControllerTests.swift
+//  RecordingsViewControllerTests.swift
 //  mobAppTests
 //
 //  Created by Noah-Vincenz Noeh on 08/04/2018.
@@ -7,13 +7,17 @@
 //
 
 import XCTest
+import Firebase
+import FirebaseDatabase
+import FirebaseStorage
 @testable import mobApp
 
-class LoginViewControllerTests: XCTestCase {
+class RecordingsViewControllerTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
+
     }
     
     override func tearDown() {
@@ -21,16 +25,51 @@ class LoginViewControllerTests: XCTestCase {
         super.tearDown()
     }
     
-    func testIsNumberEven() {
+    func testMatches() {
 
-        let viewController = LoginViewController()
-        viewController.is()
+        let viewController = RecordingsViewController()
+        XCTAssertEqual(viewController.matches(regEx: "patient\\d", inputText: "patient1@mobapp.com"), ["patient1"])
+        XCTAssertEqual(viewController.matches(regEx: "patient\\d", inputText: "patient2@mobapp.com"), ["patient2"])
+        XCTAssertEqual(viewController.matches(regEx: "a[a-z]", inputText: "patient1@mobapp.com"), ["at", "ap"])
+        
     }
     
-    func testPerformanceExample() {
+    func testAverage() {
+        let viewController = RecordingsViewController()
+        let array1 = [1,4,5.5,6,8]
+        XCTAssertEqual(viewController.average(arr: array1), 4.9)
+        let array2 = [5,1,3,1.0,5]
+        XCTAssertEqual(viewController.average(arr: array2), 3)
+
+    }
+    
+    func testReduceWhitespaces() {
+        let viewController = RecordingsViewController()
+        let str = "S    T s   f   sfd  d"
+        XCTAssertEqual(viewController.reduceWhitespaces(str: str), "S T s f sfd d")
+    }
+    
+    func testMessagesPerformance() {
         // This is an example of a performance test case.
+        let viewController = RecordingsViewController()
+
         self.measure {
             // Put the code you want to measure the time of here.
+            for _ in 0...1000 {
+                viewController.retrieveMessages(name: "Henry Croft")
+            }
+        }
+
+    }
+    
+    func testChartPerformance() {
+        // This is an example of a performance test case.
+        let viewController = RecordingsViewController()
+        self.measure {
+            // Put the code you want to measure the time of here.
+            for _ in 0...1000 {
+                viewController.retrieveChartData(reference: Storage.storage().reference().child("patient1.txt"))
+            }
         }
     }
     
