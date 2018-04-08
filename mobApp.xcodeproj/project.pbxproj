@@ -7,13 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		310D1902207A2A4E0092100F /* RecordingsViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 310D1901207A2A4E0092100F /* RecordingsViewControllerTests.swift */; };
+		310D1907207A3E0E0092100F /* LoginViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 310D1906207A3E0E0092100F /* LoginViewControllerTests.swift */; };
 		31155C8B20657F81006CDAB8 /* MessagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31155C8A20657F81006CDAB8 /* MessagesViewController.swift */; };
 		314656992061B20200265369 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314656982061B20200265369 /* AppDelegate.swift */; };
 		3146569B2061B20200265369 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3146569A2061B20200265369 /* LoginViewController.swift */; };
 		3146569E2061B20200265369 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3146569C2061B20200265369 /* Main.storyboard */; };
 		314656A02061B20200265369 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3146569F2061B20200265369 /* Assets.xcassets */; };
 		314656A32061B20200265369 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 314656A12061B20200265369 /* LaunchScreen.storyboard */; };
-		314656AE2061B20200265369 /* mobAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314656AD2061B20200265369 /* mobAppTests.swift */; };
 		314656B92061B20200265369 /* mobAppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314656B82061B20200265369 /* mobAppUITests.swift */; };
 		314656CF2061B24800265369 /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 314656CC2061B21A00265369 /* Charts.framework */; };
 		314656D02061B24800265369 /* Charts.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 314656CC2061B21A00265369 /* Charts.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -79,6 +80,8 @@
 /* Begin PBXFileReference section */
 		05E6F44DBA44B22F7A586FC2 /* Pods-mobAppUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mobAppUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-mobAppUITests/Pods-mobAppUITests.release.xcconfig"; sourceTree = "<group>"; };
 		2808B17730F976F32EA336FD /* Pods-mobAppUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mobAppUITests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-mobAppUITests/Pods-mobAppUITests.debug.xcconfig"; sourceTree = "<group>"; };
+		310D1901207A2A4E0092100F /* RecordingsViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsViewControllerTests.swift; sourceTree = "<group>"; };
+		310D1906207A3E0E0092100F /* LoginViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewControllerTests.swift; sourceTree = "<group>"; };
 		31155C8A20657F81006CDAB8 /* MessagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesViewController.swift; sourceTree = "<group>"; };
 		314656952061B20200265369 /* mobApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mobApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		314656982061B20200265369 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -88,7 +91,6 @@
 		314656A22061B20200265369 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		314656A42061B20200265369 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		314656A92061B20200265369 /* mobAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mobAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		314656AD2061B20200265369 /* mobAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mobAppTests.swift; sourceTree = "<group>"; };
 		314656AF2061B20200265369 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		314656B42061B20200265369 /* mobAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = mobAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		314656B82061B20200265369 /* mobAppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mobAppUITests.swift; sourceTree = "<group>"; };
@@ -176,8 +178,9 @@
 		314656AC2061B20200265369 /* mobAppTests */ = {
 			isa = PBXGroup;
 			children = (
-				314656AD2061B20200265369 /* mobAppTests.swift */,
 				314656AF2061B20200265369 /* Info.plist */,
+				310D1901207A2A4E0092100F /* RecordingsViewControllerTests.swift */,
+				310D1906207A3E0E0092100F /* LoginViewControllerTests.swift */,
 			);
 			path = mobAppTests;
 			sourceTree = "<group>";
@@ -559,7 +562,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				314656AE2061B20200265369 /* mobAppTests.swift in Sources */,
+				310D1907207A3E0E0092100F /* LoginViewControllerTests.swift in Sources */,
+				310D1902207A2A4E0092100F /* RecordingsViewControllerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

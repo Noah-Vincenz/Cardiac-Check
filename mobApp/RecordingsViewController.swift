@@ -11,7 +11,6 @@ import Charts
 import Firebase
 import FirebaseDatabase
 import FirebaseStorage
-import FirebaseAuth
 
 /**
  
@@ -49,8 +48,8 @@ class RecordingsViewController: UIViewController {
         
         //Set the patient name variable to the currently logged in patient and retrieve the messages for that patient name
         setPatientName()
-        self.retrieveChartData(reference: storageRef.child("ECGdata/" + self.patientID + ".txt"), signalType: "ECG")
-        self.retrieveChartData(reference: storageRef.child("PCGdata/" + self.patientID + ".txt"), signalType: "PCG")
+        self.retrieveChartData(reference: storageRef.child(self.patientID + ".txt"))
+        //self.retrieveChartData(reference: storageRef.child("PCGdata/" + self.patientID + ".txt"), signalType: "PCG")
     }
     
     override func didReceiveMemoryWarning() {
@@ -90,7 +89,7 @@ class RecordingsViewController: UIViewController {
      - parameter signalType: The string the specifies whether the signal is an ECG or PCG signal.
      
      */
-    func retrieveChartData(reference: StorageReference, signalType: String) {
+    func retrieveChartData(reference: StorageReference) {
 
         reference.getData(maxSize: 1 * 1024 * 1024) { data, error in
             if let error = error {
@@ -98,26 +97,28 @@ class RecordingsViewController: UIViewController {
             } else {
                 
                 let x = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)! as String
-                var xArr = x.split{$0 == "\n"}.map(String.init) //splitting the text by the new line character
+                let newX = x.reduceWhitespaces() //removing multiple whitespace chars
+                let xArr = newX.split{$0 == " "}.map(String.init) //splitting the text by the single white space char
                 
-                var dataToPlot = [(Double, Double)]()
+                var ecgData = [(Double, Double)]()
+                var pcgData = [(Double, Double)]()
                 var time: Double = 0
                 
                 //looping through the file
-                for i in 4...xArr.count-1 {
-                    dataToPlot.append((time, Double(xArr[i])!))
-                    //both signals have a different sampling rate
-                    if signalType == "ECG" {
-                        time += 0.01
-                    } else { //PCG
-                        time += 0.003
+                for i in 3...xArr.count-1 {
+
+                    if i % 3 == 1 { //ie. 4, 7, 10 - these are all ECG values
+                        ecgData.append((time, Double(xArr[i])!))
+                    }
+                    if i % 3 == 2 { //ie. 5, 8, 11 - these are all PCG values
+                        pcgData.append((time, Double(xArr[i])!))
+                         time += 0.005
                     }
                 }
-                self.drawChart(dataPoints: dataToPlot, type: signalType)
-                //if the signal is an ECG signal then we want to use that signal to calculate the patient's heart rate
-                if signalType == "ECG" {
-                    self.calculateHeartRate(dataArray: dataToPlot)
-                }
+                self.drawChart(dataPoints: ecgData, viewToPlot: 1)
+                self.drawChart(dataPoints: pcgData, viewToPlot: 2)
+                // we want to use that signal to calculate the patient's heart rate
+                self.calculateHeartRate(dataArray: ecgData)
             }
         }
     }
@@ -131,24 +132,21 @@ class RecordingsViewController: UIViewController {
      - parameter type: The string indicating whether the data is an ECG or PCG signal.
      
      */
-    func drawChart(dataPoints: [(Double, Double)], type: String) {
+     func drawChart(dataPoints: [(Double, Double)], viewToPlot: Int) {
         
         var lineChartEntry  = [ChartDataEntry]() //array that will contain the data for the chart later on
         
         for i in 0..<dataPoints.count {
             
             var value: ChartDataEntry
-            if type == "ECG" {
-                value = ChartDataEntry(x: dataPoints[i].0, y: dataPoints[i].1) // setting the X and Y values for a new chartDataEntry instance
-            } else {
-                value = ChartDataEntry(x: dataPoints[i].0, y: dataPoints[i].1 / 1000) // setting the X and Y values for a new chartDataEntry instance
-            }
+            value = ChartDataEntry(x: dataPoints[i].0, y: dataPoints[i].1) // setting the X and Y values for a new chartDataEntry instance
             lineChartEntry.append(value)
             
         }
         var line: LineChartDataSet
         var view: LineChartView
-        if type == "ECG" {
+    
+        if viewToPlot == 1 {
             
             line = LineChartDataSet(values: lineChartEntry, label: "Voltage") //Here we convert lineChartEntry to a LineChartDataSet
             view = ecgView
@@ -205,9 +203,9 @@ class RecordingsViewController: UIViewController {
         //array containing the square of the signal
         var squaredArray = [(Double, Double)]()
         for i in 0...dataArray.count-1 {
-            if dataArray[i].1 > 0 { //otherwise negative values under -1 for instance get added as the square of a negative number becomes positive
+            if dataArray[i].1 >= 0 { //otherwise negative values under -1 for instance get added as the square of a negative number becomes positive
                 squaredArray.append((dataArray[i].0, dataArray[i].1 * dataArray[i].1))
-            }
+            } //else the datapoint is not an R-peak as it has an amplitde of 0 or less
         }
         
         //detecting which values are above the threshold and hence should be part of an R peak
@@ -220,35 +218,41 @@ class RecordingsViewController: UIViewController {
         }
         //now need to get rid of the values that belong to the same R peak but are not the maximum of that peak
         var maxArray = [(Double, Double)]()
-        var i:Int = 0
-        
-        while i <= arrayOfValuesGreaterThanThreshold.count-1 {
-            
-            var tmpArray = [(Double, Double)]()
-            tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
-            //we need to keep track of an index in order to know by how much i should be incremented at the end of each round
-            var index = i
-            
-            //fetching the local maximum and appending it to the array containing the maxima
-            while (index < arrayOfValuesGreaterThanThreshold.count - 1 && arrayOfValuesGreaterThanThreshold[index+1].0 == arrayOfValuesGreaterThanThreshold[index].0 + 0.01 && arrayOfValuesGreaterThanThreshold[index+1].1 >= arrayOfValuesGreaterThanThreshold[index].1) {
-                tmpArray.append(arrayOfValuesGreaterThanThreshold[index+1])
-                index += 1
+        var tmpArray = [(Double, Double)]()
+        for i in 0...arrayOfValuesGreaterThanThreshold.count - 1 {
+            if i != arrayOfValuesGreaterThanThreshold.count - 1 {
+                if arrayOfValuesGreaterThanThreshold[i+1].0 == arrayOfValuesGreaterThanThreshold[i].0 + 0.005 {
+                    
+                    tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
+                
+                } else {
+
+                    tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
+                    let maxDatapoint = tmpArray.max { a, b in a.1 < b.1 }
+                    //add max from tmpArray
+                    maxArray.append(((maxDatapoint!.0), (maxDatapoint?.1)!.squareRoot()))
+                    tmpArray = [(Double, Double)]()
+                }
+            } else {
+                if tmpArray.isEmpty {
+                    
+                    maxArray.append(((arrayOfValuesGreaterThanThreshold[i].0), (arrayOfValuesGreaterThanThreshold[i].1).squareRoot()))
+                    
+                }
+                else {
+                    
+                    tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
+                    let maxDatapoint = tmpArray.max { a, b in a.1 < b.1 }
+                    //add max from tmpArray
+                    maxArray.append(((maxDatapoint!.0), (maxDatapoint?.1)!.squareRoot()))
+                    tmpArray = [(Double, Double)]()
+                }
             }
-            
-            //now max is at current index
-            maxArray.append((arrayOfValuesGreaterThanThreshold[index].0, arrayOfValuesGreaterThanThreshold[index].1.squareRoot()))
-            
-            //fetching the local minimum and skipping those, as we have already found the R peak above
-            while (index < arrayOfValuesGreaterThanThreshold.count - 1 && arrayOfValuesGreaterThanThreshold[index+1].0 == arrayOfValuesGreaterThanThreshold[index].0 + 0.01 && arrayOfValuesGreaterThanThreshold[index+1].1 <= arrayOfValuesGreaterThanThreshold[index].1) {
-                tmpArray.append(arrayOfValuesGreaterThanThreshold[index+1])
-                index += 1
-            }
-            
-            //now we are at the next R peak and want to go up from that datapoint again if possible -> so go forward in outer for loop
-            i += tmpArray.count
         }
+        
         //beats per minute can now be calculated using the number of peaks in the 30 second period
-        let bpm = (maxArray.count / 3 * 6)
+        let spikesPerTenSeconds = Double(maxArray.count) / dataArray[dataArray.count - 1].0 * 10
+        let bpm: Int = Int(round(spikesPerTenSeconds * 6))
         heartRateLabel.text = "Heart Rate = " + String(bpm) + " bpm"
     }
     
@@ -346,6 +350,16 @@ class RecordingsViewController: UIViewController {
             return []
         }
     }
+    
+    //THESE ARE FOR TESTING PURPOSES ONLY
+    func average(arr: [Double]) -> Double {
+        return arr.average
+    }
+    
+    func reduceWhitespaces(str: String) -> String {
+        return str.reduceWhitespaces()
+    }
+    //
 }
     
     
@@ -355,13 +369,25 @@ class RecordingsViewController: UIViewController {
  
  */
 extension Array where Element: FloatingPoint {
-    /// Returns the sum of all elements in the array
+    /// Return the sum of all floating point numbers in the array
     var total: Element {
         return reduce(0, +)
     }
-    /// Returns the average of all elements in the array
+    /// Return the average of all floating point numbers in the array
     var average: Element {
         return isEmpty ? 0 : total / Element(count)
+    }
+}
+
+/**
+ 
+ This is an extension that can be used to get rid of multiple whitespaces in a string and condense them to single whitespaces.
+ 
+ */
+extension String {
+    func reduceWhitespaces() -> String {
+        let components = self.components(separatedBy: NSCharacterSet.whitespacesAndNewlines)
+        return components.filter { !$0.isEmpty }.joined(separator: " ")
     }
 }
 

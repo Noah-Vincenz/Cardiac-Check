@@ -48,9 +48,8 @@ class LoginViewController: UIViewController {
      
      */
     @IBAction func loginButtonPressed(_ sender: Any) {
-        
         if userNameTextField.text != "" && passwordTextField.text != "" {
-            
+        
             Auth.auth().signIn(withEmail: userNameTextField.text!, password: passwordTextField.text!, completion: {(user, error) in
                 if user != nil { //login has been successful
                    
@@ -70,6 +69,8 @@ class LoginViewController: UIViewController {
             })
         }
         else {
+            
+            
             self.errorLabel.text = "Please enter your details"
         }
     }

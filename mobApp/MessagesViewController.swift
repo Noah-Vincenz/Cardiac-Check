@@ -94,7 +94,7 @@ class MessagesViewController: UIViewController, UITableViewDelegate, UITableView
                         //this is a message for the current patient
                         
                         //retrieves the date of the message
-                        let matched = self.matches(for: "\\d\\d?-\\d\\d?-\\d\\d\\d\\d", in: str)
+                        let matched = self.matches(regEx: "\\d\\d?-\\d\\d?-\\d\\d\\d\\d", inputText: str)
                         
                         //must be done here as function runs synch. meaning that this func finishes before the inner loop computation finishes, hence array would be empty otherwise
                         self.messagesArray.append((matched[0], messageID.value as! String))
@@ -120,18 +120,20 @@ class MessagesViewController: UIViewController, UITableViewDelegate, UITableView
      - returns: The array of all the substrings that match the regular expression.
      
      */
-    func matches(for regex: String, in text: String) -> [String] {
+    func matches(regEx: String, inputText: String) -> [String] {
         
         do {
-            let regex = try NSRegularExpression(pattern: regex)
-            let results = regex.matches(in: text,
-                                        range: NSRange(text.startIndex..., in: text))
-            return results.map {
-                String(text[Range($0.range, in: text)!])
+            let regex = try NSRegularExpression(pattern: regEx)
+            let stringsMatched = regex.matches(in: inputText,
+                                               range: NSRange(inputText.startIndex..., in: inputText))
+            return stringsMatched.map {
+                String(inputText[Range($0.range, in: inputText)!])
             }
+            //Catch the error, print an error message and return an empty array.
         } catch let error {
             print("invalid regex: \(error.localizedDescription)")
             return []
         }
     }
+    
 }
