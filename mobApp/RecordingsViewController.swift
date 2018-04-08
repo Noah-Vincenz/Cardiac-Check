@@ -220,33 +220,22 @@ class RecordingsViewController: UIViewController {
         var maxArray = [(Double, Double)]()
         var tmpArray = [(Double, Double)]()
         for i in 0...arrayOfValuesGreaterThanThreshold.count - 1 {
-            if i != arrayOfValuesGreaterThanThreshold.count - 1 {
-                if arrayOfValuesGreaterThanThreshold[i+1].0 == arrayOfValuesGreaterThanThreshold[i].0 + 0.005 {
-                    
+            if i != arrayOfValuesGreaterThanThreshold.count - 1 && arrayOfValuesGreaterThanThreshold[i+1].0 == arrayOfValuesGreaterThanThreshold[i].0 + 0.005 {
+                
                     tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
                 
-                } else {
-
-                    tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
-                    let maxDatapoint = tmpArray.max { a, b in a.1 < b.1 }
-                    //add max from tmpArray
-                    maxArray.append(((maxDatapoint!.0), (maxDatapoint?.1)!.squareRoot()))
-                    tmpArray = [(Double, Double)]()
-                }
-            } else {
-                if tmpArray.isEmpty {
-                    
+            } else if i == arrayOfValuesGreaterThanThreshold.count - 1 && tmpArray.isEmpty {
+                
                     maxArray.append(((arrayOfValuesGreaterThanThreshold[i].0), (arrayOfValuesGreaterThanThreshold[i].1).squareRoot()))
-                    
-                }
-                else {
+                
+            } else {
                     
                     tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
                     let maxDatapoint = tmpArray.max { a, b in a.1 < b.1 }
                     //add max from tmpArray
                     maxArray.append(((maxDatapoint!.0), (maxDatapoint?.1)!.squareRoot()))
                     tmpArray = [(Double, Double)]()
-                }
+    
             }
         }
         
