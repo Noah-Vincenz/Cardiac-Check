@@ -16,6 +16,7 @@
   "dependencies": {
     "dsp.js": "^1.0.1",
     "kalmanjs": "^1.0.0-beta",
-    "lpf": "^1.0.0"
+    "lpf": "^1.0.0",
+    "object-assign": "^4.1.1"
   }
 }
