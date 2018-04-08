@@ -1,15 +1,14 @@
 //
-//  mobAppTests.swift
+//  LoginViewControllerTests.swift
 //  mobAppTests
 //
-//  Created by Noah-Vincenz Noeh on 20/03/2018.
+//  Created by Noah-Vincenz Noeh on 08/04/2018.
 //  Copyright © 2018 Noah-Vincenz Noeh. All rights reserved.
 //
 
 import XCTest
-@testable import mobApp
 
-class mobAppTests: XCTestCase {
+class LoginViewControllerTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
