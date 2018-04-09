@@ -36,7 +36,6 @@ const db = firebase.database();
 const patientsRef = db.ref("patients");
 const storage = firebase.storage();
 
-
 /**
  * This function gets called when the window first loads. It changes the data that is currently shown to show the data of the patient 'Henry'
  */
@@ -121,9 +120,9 @@ function updateGraphs(patientKey) {
             if (xhr.readyState === 4) {  // Makes sure the document is ready to parse.
                 if (xhr.status === 200) {  // Makes sure the file has been found.
                     allText = xhr.responseText;
-
                     //This replaces multiple spaces in the text file by a single space character
-                    var modifiedString = allText.replace(/\s+/g, ' ')
+                    var modifiedString = reduceWhitespaces(allText)
+
                     //now we can split the string by single whitespace
                     words = modifiedString.split(" ")
 
@@ -220,6 +219,11 @@ function addStripLines(){
     }
 }
 
+function reduceWhitespaces(stringToManipulate) {
+  //This replaces multiple spaces in the text file by a single space character
+  return stringToManipulate.replace(/\s+/g, ' ')
+}
+
 /**
  * Add new option to selection drop down when a new child is added on the database.
  */
@@ -293,31 +297,26 @@ function showPCG(patientKey) {
     for (var i = 0; i < kalmanArray.length; ++i) { //using kalman filtered PCG signal for noise reduction
         var inp;
         if (Math.pow(kalmanArray[i], 2) == 0) {
-          // since log of 0 is undefined
-          inp = 0;
+            // since log of 0 is undefined
+            inp = 0;
         }
         else {
-          inp = Math.pow(0-kalmanArray[i], 2) * Math.log(Math.pow(kalmanArray[i], 2)) / 1000000;
+            inp = Math.pow(0-kalmanArray[i], 2) * Math.log(Math.pow(kalmanArray[i], 2)) / 1000000;
         }
         shannArr.push(inp);
     }
     console.log("Shannon Energy");
     console.log(shannArr);
     //making a copy of the shannonEnergy output as we want to sort the array, but not affect the original array
-    var newArray = shannArr.slice();
-    newArray.sort(function(a,b) { return a - b;});
+    var newArray = sortArray(shannArr.slice())
     //array for the maxima of the shannon array
     var newMax = [];
     //we want to have the same number of maxima as the number of R peaks in the raw ECG data
     for (var i = newArray.length - 1; newMax.length < xyArraySpikes.length; --i) {
-      newMax.push(newArray[i]);
+        newMax.push(newArray[i]);
     }
     //computing average of the peaks (potentially S1's) to get a threshold for the peak detection of s1 and s2
-    var sum = 0;
-    for (var i = 0; i < newMax.length; ++i) {
-      sum += newMax[i];
-    }
-    var avg = sum / newMax.length;
+    var avg = getAverage(newMax)
     //the threshold is usually sufficient as 1/4 of the average of the maxima
     var threshold = avg / 4;
     console.log("Shannon threshold")
@@ -337,43 +336,33 @@ function showPCG(patientKey) {
 
     //instead of having multiple crosses marking an S point we want just one mark
     for (var i = 0; i < sNoiseArray.length; ++i) {
-      var tmpArray = [];
-      tmpArray.push(sNoiseArray[i]);
-      var index = i;
-      var sNoiseToCompare = sNoiseArray[index];
-      while (sNoiseArray[index+1] * 0.005 < ((sNoiseToCompare * 0.005) + 0.25)) {
-          tmpArray.push(sNoiseArray[index + 1]);
-          sNoiseToCompare = sNoiseArray[index + 1];
-          ++index;
-      }
-
-
-      //find the largest element of the group of the SNoises
-      var tmpArray2 = [] //need to get the y values from the shannonEnergy array, as the tmpArray only contains the index of the datapoint
-      for (var j = 0; j < tmpArray.length; ++j) {
-          tmpArray2[j] = shannArr[tmpArray[j]]
-      }
-
-      var max = tmpArray2[0];
-      var maxIndex = 0;
-
-      for (var j = 1; j < tmpArray2.length; ++j) {
-          if (tmpArray2[j] > max) {
-              maxIndex = j;
-              max = tmpArray2[j];
+          var tmpArray = [];
+          tmpArray.push(sNoiseArray[i]);
+          var index = i;
+          var sNoiseToCompare = sNoiseArray[index];
+          while (sNoiseArray[index+1] * 0.005 < ((sNoiseToCompare * 0.005) + 0.25)) {
+              tmpArray.push(sNoiseArray[index + 1]);
+              sNoiseToCompare = sNoiseArray[index + 1];
+              ++index;
           }
-      }
 
+          //find the largest element of the group of the SNoises
+          var tmpArray2 = [] //need to get the y values from the shannonEnergy array, as the tmpArray only contains the index of the datapoint
+          for (var j = 0; j < tmpArray.length; ++j) {
+              tmpArray2[j] = shannArr[tmpArray[j]]
+          }
 
+          var max = Math.max(...tmpArray2)
+          var maxIndex = tmpArray2.indexOf(max);
 
-      //add the largest element to the final array
-      if (tmpArray.length != 1) {
-          newSNoiseArray.push(tmpArray[maxIndex]);
-      }
-      else {
-          newSNoiseArray.push(tmpArray[0]);
-      }
-      i += tmpArray.length - 1;
+          //add the largest element to the final array
+          if (tmpArray.length != 1) {
+              newSNoiseArray.push(tmpArray[maxIndex]);
+          }
+          else {
+              newSNoiseArray.push(tmpArray[0]);
+          }
+          i += tmpArray.length - 1;
 
     }
     console.log('newSNoiseArray');
@@ -385,14 +374,13 @@ function showPCG(patientKey) {
     //Fast Fourier Transform
     var newArr = new Float64Array(4096); //4096 for full range, 256 for first two sounds
     //4096 because it has to be a power of 2
-    var sum = 0;
     for (var i = 0; i < 4096; ++i) {
         newArr[i] = pcgYArrayData[i]
-        sum += pcgYArrayData[i]
     }
-    var mean = sum / 4096
+    var mean = getAverage(newArr)
+
     for (var i = 0; i < 4096; ++i) { //removing the mean from each datapoint in order to remove DC component
-        newArr[i] = newArr[i] - mean
+        newArr[i] -= mean
     }
     var fft = new dsp.FFT(4096, 200);
     fft.forward(newArr);
@@ -414,43 +402,31 @@ function showPCG(patientKey) {
 }
 
 /**
+ * Sort an array in ascending order.
+ * @param {array} arrayIn - The array to be sorted.
+ * @return {array} The sorted array.
+ */
+function sortArray(arrayIn) {
+    return arrayIn.sort(function(a,b) { return a - b;});
+}
+
+/**
  * Calculate the patient's heartrate.
  */
 function heartRateCalculation() {
     //peak detection & bpm for raw ECG
 
-    //making a copy of yArrayData array
-    var newArr = yArrayData.slice()
-
-    var arrayOfMaxes = []
-    var sum = 0
-    //retrieving the 15 largest y values in the data array
-    for (var i = 0; i < 15; ++i) {
-        var max = Math.max(...newArr)
-        arrayOfMaxes.push(max)
-        sum += max
-        var indexOfMax = newArr.indexOf(max)
-        if (indexOfMax > -1) {
-            newArr.splice(indexOfMax, 1)
-        }
-    }
+    //retrieving the 15 largest y values in the data array & making a copy of yArrayData array
+    var arrayOfMaxes = retrieveLargestDatapoints(yArrayData.slice())
 
     //taking the average of all values in the array of maxima
-    var avg = sum / arrayOfMaxes.length
+    var avg = getAverage(arrayOfMaxes)
     var squareOfAvg = avg * avg
     //threshold above which R peaks should be detected: 1/3 of the square of the average
     var threshold = squareOfAvg / 3
 
     //array containing the square of the signal
-    var squaredArray = []
-    for (var i = 0; i < xyArrayData.length; ++i) {
-        if (xyArrayData[i].y > 0) { //otherwise negative values over 1 get added, as the square of a negative becomes positive
-            squaredArray.push({
-                x: xyArrayData[i].x,
-                y: xyArrayData[i].y * xyArrayData[i].y
-            })
-        } //else the value will no be an r peak, as a negative or 0 amplitude
-    }
+    var squaredArray = squareArray(xyArrayData)
 
     var arrayOfValuesGreaterThanThreshold = []
     for (var i = 0; i < squaredArray.length; ++i) {
@@ -464,25 +440,99 @@ function heartRateCalculation() {
     }
 
     //now need to get rid of the values that belong to the same R peak but are not the maximum of that peak
+    xyArraySpikes = getRidOfSamePeakPoints(arrayOfValuesGreaterThanThreshold)
+    console.log('xyArray spikes');
+    console.log(xyArraySpikes);
+    //beats per minute can now be calculated using the number of peaks in the 30 second period
+    var bpm = calculateBPM(xyArraySpikes, xyArrayData[xyArrayData.length - 1].x)
+    console.log(bpm+'bpm');
+    document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + Math.round(bpm) + "bpm";
+
+}
+
+/**
+ * Retrieve the 15 largest elements wihin a one dimensional array of numbers.
+ * @param {array} arrayIn - The array of numbers to be used.
+ * @return {array} The array containing the 15 largest elements.
+ */
+function retrieveLargestDatapoints(arrayIn) {
+    var returnArray = []
+    for (var i = 0; i < 15; ++i) {
+        var max = Math.max(...arrayIn)
+        returnArray.push(max)
+        var indexOfMax = arrayIn.indexOf(max)
+        if (indexOfMax > -1) {
+            arrayIn.splice(indexOfMax, 1)
+        }
+    }
+    return returnArray
+}
+
+/**
+ * Calculate the average of a one dimensional array of numbers.
+ * @param {array} arrayIn - The array of numbers to be used.
+ * @return {number} The average of the elements in the array that was passed in as parameter.
+ */
+function getAverage(arrayIn) {
+    var sum = 0;
+    for (var i = 0; i < arrayIn.length; ++i) {
+        sum += arrayIn[i]
+    }
+    return sum / arrayIn.length
+}
+
+/**
+ * Calculate the beats per minute (bpm) based on the array of maxima and the length of the recording.
+ * @param {array} maximaArray - The array of maxima (xyArraySpikes).
+ * @param {number} lengthOfRecording - The length of the recording in seconds.
+ * @return {number} The number of spikes per minute or the number of beats per minute.
+ */
+function calculateBPM(maximaArray, lengthOfRecording) {
+    var spikesPerTenSeconds = maximaArray.length / lengthOfRecording * 10
+    return spikesPerTenSeconds * 6
+}
+
+/**
+ * Square the y values of the array passed in as parameter.
+ * @param {array} arrayToBeSquared - The array that should be squared.
+ * @return {array} The squared array.
+ */
+function squareArray(arrayToBeSquared) {
+    var returnArray = []
+    for (var i = 0; i < arrayToBeSquared.length; ++i) {
+        if (arrayToBeSquared[i].y > 0) { //otherwise negative values over 1 get added, as the square of a negative becomes positive
+            returnArray.push({
+                x: arrayToBeSquared[i].x,
+                y: arrayToBeSquared[i].y * arrayToBeSquared[i].y
+            })
+        } //else the value will no be an r peak, as a negative or 0 amplitude, so this case can be neglected
+    }
+    return returnArray
+}
+
+/**
+ * Get rid of all the points that belong to the same R-peak and use only their maximum.
+ * @param {array} arrayIn - The array that should be used to find the single maxima.
+ * @return {array} The final array including all final R-peaks.
+ */
+function getRidOfSamePeakPoints(arrayIn) {
     var maximaArray = []
-    var i = 0
     var tmpArray = []
+    for (var i = 0; i < arrayIn.length; ++i) {
+            if (i != arrayIn.length - 1 && arrayIn[i+1].x.toFixed(3) == (arrayIn[i].x + 0.005).toFixed(3)) {
 
-    for (var i = 0; i < arrayOfValuesGreaterThanThreshold.length; ++i) {
-            if (i != arrayOfValuesGreaterThanThreshold.length - 1 && arrayOfValuesGreaterThanThreshold[i+1].x.toFixed(3) == (arrayOfValuesGreaterThanThreshold[i].x + 0.005).toFixed(3)) {
+                    tmpArray.push(arrayIn[i])
 
-                    tmpArray.push(arrayOfValuesGreaterThanThreshold[i])
-
-            } else if (i == arrayOfValuesGreaterThanThreshold.length - 1 && tmpArray.length == 0) {
+            } else if (i == arrayIn.length - 1 && tmpArray.length == 0) {
 
                     maximaArray.push({
-                        x: arrayOfValuesGreaterThanThreshold[i].x,
-                        y: Math.sqrt(arrayOfValuesGreaterThanThreshold[i].y)
+                        x: arrayIn[i].x,
+                        y: Math.sqrt(arrayIn[i].y)
                     })
 
             } else {
 
-                    tmpArray.push(arrayOfValuesGreaterThanThreshold[i])
+                    tmpArray.push(arrayIn[i])
                     var maxDatapoint = tmpArray[0]
                     for (var j = 1; j < tmpArray.length; ++j) {
                       if (tmpArray[j].y > maxDatapoint.y) {
@@ -497,52 +547,10 @@ function heartRateCalculation() {
                     tmpArray = []
 
             }
-        }
-
-/*
-
-
-    while (i <= arrayOfValuesGreaterThanThreshold.length - 1) {
-        var tmpArray = []
-        tmpArray.push(arrayOfValuesGreaterThanThreshold[i])
-        var index = i
-
-        while (index < arrayOfValuesGreaterThanThreshold.length - 1 &&
-          arrayOfValuesGreaterThanThreshold[index+1].x == (arrayOfValuesGreaterThanThreshold[index].x + 0.005).toFixed(3) &&
-           arrayOfValuesGreaterThanThreshold[index+1].y >= arrayOfValuesGreaterThanThreshold[index].y) {
-
-            tmpArray.push(arrayOfValuesGreaterThanThreshold[index+1])
-            index += 1
-        }
-
-
-        maximaArray.push({
-            x: arrayOfValuesGreaterThanThreshold[index].x,
-            y: Math.sqrt(arrayOfValuesGreaterThanThreshold[index].y)
-        })
-
-        while (index < arrayOfValuesGreaterThanThreshold.length - 1 &&
-           arrayOfValuesGreaterThanThreshold[index+1].x == (arrayOfValuesGreaterThanThreshold[index].x + 0.005).toFixed(3) &&
-            arrayOfValuesGreaterThanThreshold[index+1].y <= arrayOfValuesGreaterThanThreshold[index].y) {
-
-            tmpArray.push(arrayOfValuesGreaterThanThreshold[index+1])
-            index += 1
-        }
-
-        //now we are at the next S peak and want to go up from there again -> so go forward in outer for loop
-        i += tmpArray.length
     }
-*/
-    xyArraySpikes = maximaArray
-    console.log('xyArray spikes');
-    console.log(xyArraySpikes);
-    //beats per minute can now be calculated using the number of peaks in the 30 second period
-    var spikesPerTenSeconds = maximaArray.length / xyArrayData[xyArrayData.length - 1].x * 10
-    var bpm = (spikesPerTenSeconds * 6)
-    console.log(bpm+'bpm');
-    document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + Math.round(bpm) + "bpm";
-
+    return maximaArray
 }
+
 
 
 /**
@@ -616,7 +624,6 @@ function ECGSignalProcessing(gradientValue) {
             copyOfCurrentTime -= 1;
         }
 
-        //console.log("JUJIMUFU")
         //console.log(currentTPeak)
         //found real TPeak
 
