@@ -519,7 +519,7 @@ function getRidOfSamePeakPoints(arrayIn) {
     var maximaArray = []
     var tmpArray = []
     for (var i = 0; i < arrayIn.length; ++i) {
-            if (i != arrayIn.length - 1 && arrayIn[i+1].x.toFixed(3) == (arrayIn[i].x + 0.005).toFixed(3)) {
+            if (i != arrayIn.length - 1 && parseFloat(arrayIn[i+1].x.toFixed(3)) == parseFloat((arrayIn[i].x + 0.005).toFixed(3))) {
 
                     tmpArray.push(arrayIn[i])
 
