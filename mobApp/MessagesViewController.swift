@@ -35,6 +35,7 @@ class MessagesViewController: UIViewController, UITableViewDelegate, UITableView
     //Creating cells for each message
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: UITableViewCellStyle.default, reuseIdentifier: "cell")
+        cell.layer.borderColor = UIColor.gray.cgColor
         cell.textLabel?.text = messagesArray[indexPath.row].0 + ": " + messagesArray[indexPath.row].1
         //making sure that messages with longer text are not in single lined cells
         cell.textLabel?.numberOfLines = 0

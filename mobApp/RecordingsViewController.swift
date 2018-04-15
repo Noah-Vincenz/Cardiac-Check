@@ -24,7 +24,6 @@ class RecordingsViewController: UIViewController {
     @IBOutlet weak var ecgView: LineChartView!
     @IBOutlet weak var pcgView: LineChartView!
     @IBOutlet weak var heartRateLabel: UILabel!
-    var months: [Double]!
     var patientID: String = ""
     var patientName: String = ""
     var messagesArray: [(String, String)] = []
@@ -33,11 +32,12 @@ class RecordingsViewController: UIViewController {
     // Create a storage reference from the Firebase storage service
     let storageRef = Storage.storage().reference()
     
-    
     // MARK: - Parent methods
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+      
         // Do any additional setup after loading the view, typically from a nib.
         let email = Auth.auth().currentUser?.email
         
@@ -49,7 +49,6 @@ class RecordingsViewController: UIViewController {
         //Set the patient name variable to the currently logged in patient and retrieve the messages for that patient name
         setPatientName()
         self.retrieveChartData(reference: storageRef.child(self.patientID + ".txt"))
-        //self.retrieveChartData(reference: storageRef.child("PCGdata/" + self.patientID + ".txt"), signalType: "PCG")
     }
     
     override func didReceiveMemoryWarning() {
@@ -72,7 +71,7 @@ class RecordingsViewController: UIViewController {
             let destinationVC = segue.destination as! LoginViewController
             
             //Set the text fields to be empty - otherwise when the user logs out the user details will still be stored in the text fields which is not desirable
-            destinationVC.userNameTextField.text = ""
+            destinationVC.patientIDTextField.text = ""
             destinationVC.passwordTextField.text = ""
             
         }
@@ -92,7 +91,8 @@ class RecordingsViewController: UIViewController {
     func retrieveChartData(reference: StorageReference) {
 
         reference.getData(maxSize: 1 * 1024 * 1024) { data, error in
-            if let error = error {
+            if let myError = error?.localizedDescription {
+                print(myError) // gives more information
                 print("An error occured whilst trying do download the data for the chart.")
             } else {
                 
@@ -121,6 +121,7 @@ class RecordingsViewController: UIViewController {
                 self.calculateHeartRate(dataArray: ecgData)
             }
         }
+       
     }
     
     
@@ -186,8 +187,8 @@ class RecordingsViewController: UIViewController {
             copyOfYValues.append(dataArray[i].1)
         }
         var arrayOfMaxes = [Double]()
-        //retrieving the 15 largest y values in the dataArray
-        for _ in 0...14 {
+        //retrieving the 25 largest y values in the dataArray
+        for _ in 0...24 {
             let max = copyOfYValues.max()
             arrayOfMaxes.append(max!)
             //getting the index to remove that element at the specified index
@@ -198,7 +199,7 @@ class RecordingsViewController: UIViewController {
         let avg = arrayOfMaxes.average
         let squareOfAvg = avg * avg
         //threshold above which R peaks should be detected: 1/3 of the square of the average
-        let threshold = squareOfAvg / 3
+        let threshold = squareOfAvg / 4
         
         //array containing the square of the signal
         var squaredArray = [(Double, Double)]()
@@ -244,7 +245,6 @@ class RecordingsViewController: UIViewController {
         let bpm: Int = Int(round(spikesPerTenSeconds * 6))
         heartRateLabel.text = "Heart Rate = " + String(bpm) + " bpm"
     }
-    
     
     // MARK: - Other
     
