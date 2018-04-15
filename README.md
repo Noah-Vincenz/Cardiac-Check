@@ -1,8 +1,6 @@
-THIS IS MY README
-
 # A web portal and mobile app system for the remote monitoring of patients with heart failure
 
-This project consists of a web portal and mobile app system for the remote monitoring of patients with heart failure. It also includes the analysis of the heart signals.
+The system proposed in this project can be used for the remote monitoring of patients with heart failure. It also includes the analysis of the heart signals.
 
 ## Using the Applications
 

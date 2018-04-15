@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		310D1902207A2A4E0092100F /* RecordingsViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 310D1901207A2A4E0092100F /* RecordingsViewControllerTests.swift */; };
-		310D1907207A3E0E0092100F /* LoginViewControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 310D1906207A3E0E0092100F /* LoginViewControllerTests.swift */; };
 		31155C8B20657F81006CDAB8 /* MessagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31155C8A20657F81006CDAB8 /* MessagesViewController.swift */; };
 		314656992061B20200265369 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314656982061B20200265369 /* AppDelegate.swift */; };
 		3146569B2061B20200265369 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3146569A2061B20200265369 /* LoginViewController.swift */; };
@@ -81,7 +80,6 @@
 		05E6F44DBA44B22F7A586FC2 /* Pods-mobAppUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mobAppUITests.release.xcconfig"; path = "Pods/Target Support Files/Pods-mobAppUITests/Pods-mobAppUITests.release.xcconfig"; sourceTree = "<group>"; };
 		2808B17730F976F32EA336FD /* Pods-mobAppUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-mobAppUITests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-mobAppUITests/Pods-mobAppUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		310D1901207A2A4E0092100F /* RecordingsViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsViewControllerTests.swift; sourceTree = "<group>"; };
-		310D1906207A3E0E0092100F /* LoginViewControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewControllerTests.swift; sourceTree = "<group>"; };
 		31155C8A20657F81006CDAB8 /* MessagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesViewController.swift; sourceTree = "<group>"; };
 		314656952061B20200265369 /* mobApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mobApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		314656982061B20200265369 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -180,7 +178,6 @@
 			children = (
 				314656AF2061B20200265369 /* Info.plist */,
 				310D1901207A2A4E0092100F /* RecordingsViewControllerTests.swift */,
-				310D1906207A3E0E0092100F /* LoginViewControllerTests.swift */,
 			);
 			path = mobAppTests;
 			sourceTree = "<group>";
@@ -562,7 +559,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				310D1907207A3E0E0092100F /* LoginViewControllerTests.swift in Sources */,
 				310D1902207A2A4E0092100F /* RecordingsViewControllerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -735,7 +731,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEPLOYMENT_LOCATION = YES;
 				DEVELOPMENT_TEAM = ASYJRGMP4J;
+				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = mobApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
@@ -759,6 +757,7 @@
 				DEVELOPMENT_TEAM = ASYJRGMP4J;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = mobApp/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
@@ -783,6 +782,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = project.mobAppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos11.3;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/mobApp.app/mobApp";
@@ -801,6 +801,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = project.mobAppTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos11.3;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/mobApp.app/mobApp";
@@ -818,6 +819,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = project.mobAppUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos11.3;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = mobApp;
@@ -835,6 +837,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = project.mobAppUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos11.3;
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = mobApp;
