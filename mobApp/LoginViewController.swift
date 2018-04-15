@@ -32,6 +32,11 @@ class LoginViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         self.patientIDTextField.autocorrectionType = .no
         self.passwordTextField.autocorrectionType = .no
+        if #available(iOS 11, *) {
+            // Disables the password autoFill accessory view.
+            patientIDTextField.textContentType = UITextContentType("")
+            passwordTextField.textContentType = UITextContentType("")
+        }
         
     }
     
