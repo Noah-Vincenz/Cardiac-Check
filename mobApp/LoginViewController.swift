@@ -19,7 +19,7 @@ class LoginViewController: UIViewController {
     
     //MARK: - Variables
     
-    @IBOutlet weak var userNameTextField: UITextField!
+    @IBOutlet weak var patientIDTextField: UITextField!
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var loginButton: UIButton!
     @IBOutlet weak var errorLabel: UILabel!
@@ -30,6 +30,9 @@ class LoginViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        self.patientIDTextField.autocorrectionType = .no
+        self.passwordTextField.autocorrectionType = .no
+        
     }
     
     override func didReceiveMemoryWarning() {
@@ -47,10 +50,10 @@ class LoginViewController: UIViewController {
      - parameter sender: The login Button.
      
      */
-    @IBAction func loginButtonPressed(_ sender: Any) {
-        if userNameTextField.text != "" && passwordTextField.text != "" {
+    @IBAction func loginButtonPressed(_ sender: UIButton) {
+        if patientIDTextField.text != "" && passwordTextField.text != "" {
         
-            Auth.auth().signIn(withEmail: userNameTextField.text!, password: passwordTextField.text!, completion: {(user, error) in
+            Auth.auth().signIn(withEmail: patientIDTextField.text!, password: passwordTextField.text!, completion: {(user, error) in
                 if user != nil { //login has been successful
                    
                     self.errorLabel.text = ""
@@ -70,10 +73,24 @@ class LoginViewController: UIViewController {
         }
         else {
             
-            
             self.errorLabel.text = "Please enter your details"
         }
     }
+    
+    /**
+     
+     This function is triggered when the help button is pressed. An alert pops up that gives the user more information about the login details.
+     
+     - parameter sender: The help Button.
+     
+     */
+    @IBAction func helpBtnPressed(_ sender: Any) {
+        let alert = UIAlertController(title: "", message: "The patient ID is your email address. You should have been provided with the password by your doctor. In case you are still having difficulties please contact your doctor.", preferredStyle: .alert)
+        let action = UIAlertAction(title: "Ok", style: .default, handler: nil)
+        alert.addAction(action)
+        self.present(alert, animated: true, completion: nil)
+    }
+    
     
     /**
      
