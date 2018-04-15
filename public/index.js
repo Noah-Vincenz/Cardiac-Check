@@ -84,8 +84,6 @@ global.changeDataShown = function(strUser) {
             $("#table_body").append(str);
 
         });
-
-
     });
 }
 
@@ -95,17 +93,17 @@ global.changeDataShown = function(strUser) {
  * 2) 1 mm (thin lines) = 0.1 mV & 5 mm (bold lines) = 0.5 mV
  */
 function addStripLines(){
-    for (var i = 0; i < 40; i = i + 0.04) {
-            xAxisStripLinesArray.push({value:i,thickness:0.125, color:"#FF0000"});
+    for (var i = 0; i < 40; i += 0.04) {
+            xAxisStripLinesArray.push({value:i, thickness:0.125, color:"#FF0000"});
     }
-    for (var i = 0; i < 40; i = i + 0.2) {
-            xAxisStripLinesArray.push({value:i,thickness:0.375, color:"#FF0000"});
+    for (var i = 0; i < 40; i += 0.2) {
+            xAxisStripLinesArray.push({value:i, thickness:0.375, color:"#FF0000"});
     }
-    for (var i = -5; i < 5; i = i + 0.1) {
-            yAxisStripLinesArray.push({value:i,thickness:0.125, color:"#FF0000"});
+    for (var i = -5; i < 5; i += 0.1) {
+            yAxisStripLinesArray.push({value:i, thickness:0.125, color:"#FF0000"});
     }
-    for (var i = -5; i < 5; i = i + 0.5) {
-            yAxisStripLinesArray.push({value:i,thickness:0.375, color:"#FF0000"});
+    for (var i = -5; i < 5; i += 0.5) {
+            yAxisStripLinesArray.push({value:i, thickness:0.375, color:"#FF0000"});
     }
 }
 
@@ -121,13 +119,12 @@ function updateGraphs(patientKey) {
 
     // Create a reference with an initial file path and name
     var storageRef = storage.ref();
-    //var pathReference = storageRef.child('ECGdata/'+patientKey+'.txt');
     var pathReference = storageRef.child(patientKey+'.txt');
 
     pathReference.getDownloadURL().then(function(url) {
         // 'url' is the download URL
 
-        // This can be downloaded directly by making use of XMLHttpRequest:
+        // can be downloaded directly by making use of an XMLHttpRequest:
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url);
         xhr.responseType = 'text';
@@ -137,14 +134,13 @@ function updateGraphs(patientKey) {
                 if (xhr.status === 200) {  // Makes sure the file has been found.
                     allText = xhr.responseText;
                     //This replaces multiple spaces in the text file by a single space character
-                    var modifiedString = reduceWhitespaces(allText)
+                    var modifiedString = reduceWhitespaces(allText);
 
                     //now we can split the string by single whitespace
-                    words = modifiedString.split(" ")
+                    words = modifiedString.split(" ");
 
                     var time = 0.000;
-
-                    interval = parseFloat((parseFloat(words[6]) - parseFloat(words[3])).toFixed(3))
+                    interval = parseFloat((parseFloat(words[6]) - parseFloat(words[3])).toFixed(3)); //detects the sampling rate of the recording
 
                     //loop through lines and add each datapoint to array, which will be used for the graphs later on.
                     //start at index i = 4, as up to that is just description of the file
@@ -153,16 +149,16 @@ function updateGraphs(patientKey) {
                               xyArrayData.push({
                                   x: time,
                                   y: parseFloat(words[i]).toFixed(4)*1
-                              })
-                              yArrayData.push(parseFloat(words[i]).toFixed(4)*1)
+                              });
+                              yArrayData.push(parseFloat(words[i]).toFixed(4)*1);
                           }
                           if (i % 3 == 2) { //ie. 5, 8, 11 - these are all PCG values
                               pcgArrayData.push({
                                   x: time,
                                   y: parseFloat(words[i]).toFixed(4)*1*100000
-                              })
-                              pcgYArrayData.push(parseFloat(words[i]).toFixed(4)*1*100000)
-                              time = parseFloat((time + interval).toFixed(3))
+                              });
+                              pcgYArrayData.push(parseFloat(words[i]).toFixed(4)*1*100000);
+                              time = parseFloat((time + interval).toFixed(3)); //increment the current time by the specified interval
                           }
 
                     }
@@ -170,13 +166,13 @@ function updateGraphs(patientKey) {
                     console.log(xyArrayData);
                     console.log('yArrayData');
                     console.log(yArrayData);
-                    console.log('pcgArrayData')
-                    console.log(pcgArrayData)
-                    console.log('pcgYArrayData')
-                    console.log(pcgYArrayData)
+                    console.log('pcgArrayData');
+                    console.log(pcgArrayData);
+                    console.log('pcgYArrayData');
+                    console.log(pcgYArrayData);
 
+                    //THE FOLLOWING MUST BE CALLED INSIDE OF THIS FUNCTION BECAUSE OF ITS ASYNCHRONOUS NATURE
                     heartRateCalculation();
-
                     //for high pass filter uncomment below
                     /*
                     var copyOfArr = new Float64Array(yArrayData.length);
@@ -187,13 +183,12 @@ function updateGraphs(patientKey) {
                     filter.process(copyOfArr)
                     drawGraph(copyOfArr, 2, "High Pass Filter");
                     */
-
+                    drawGraph(yArrayData, 1, "ECG"); //ECG
                     ECGSignalProcessing(interval);
-
-                    drawGraph(yArrayData, 1, "ECG");
-                    //low pass filter
-                    drawGraph(lowPassFilter(yArrayData), 4, "Filtered ECG - Low Pass Filter");
-                    showPCG(patientKey, interval);
+                    drawGraph(pcgArrayData, 2, "PCG");
+                    processPCG(patientKey, interval); //PCG
+                    fastFourierTransform(); //FFT
+                    drawGraph(lowPassFilter(yArrayData), 4, "Filtered ECG - Low Pass Filter"); //lowPassFilter
                 }
             }
         };
@@ -201,7 +196,7 @@ function updateGraphs(patientKey) {
         xhr.send(null);
 
     }).catch(function(error) {
-      // Handle any errors
+        // Handle any errors
     });
 }
 
@@ -212,7 +207,7 @@ function updateGraphs(patientKey) {
  */
 function reduceWhitespaces(stringToManipulate) {
   //This replaces multiple spaces in the text file by a single space character
-  return stringToManipulate.replace(/\s+/g, ' ')
+  return stringToManipulate.replace(/\s+/g, ' ');
 }
 
 /**
@@ -238,25 +233,14 @@ global.getSelectedUser = function() {
 
 /**
  * Store message from the text area in the database and add an alert to confirm that the message has been stored.
+ * @param {string} recipient - The string specifying the name of the recipient.
  */
 global.submitText = function(recipient) {
   //only if the text area is not empty
-  if(textArea.value != "") {
-      db.ref("messages/" + recipient + " " + getDate()).set(textArea.value);
-      window.alert("Message has been stored on the database!")
-  }
-}
-
-/**
- * Add new patient data to the database.
- */
-function writePatientsData(patientId, patientName, patientDob, patientWeight) {
-    db.ref('patients/' + patientId).set({
-      "id": patientId,
-      "name": patientName,
-      "dob": patientDob,
-      "weight": patientWeight
-    });
+    if(textArea.value != "") {
+        db.ref("messages/" + recipient + " " + getDate()).set(textArea.value);
+        window.alert("Message has been stored on the database!");
+    }
 }
 
 /**
@@ -268,37 +252,27 @@ function getDate() {
    var year    = now.getFullYear();
    var month   = now.getMonth()+1;
    var day     = now.getDate();
-   var dateTime = day + '-' + month + "-" + year;
+   var dateTime = day + "-" + month + "-" + year;
    return dateTime;
 }
 
 /**
- * Show and process PCG.
+ * Process the PCG signal.
  * @param {string} patientKey - The id of the currently selected patient.
+ * @param {number} intervalValue - The time interval at which samples are taken (in seconds).
  */
-function showPCG(patientKey, intervalValue) {
+function processPCG(patientKey, intervalValue) {
 
-    drawGraph(pcgArrayData, 2, "PCG");
     //Kalman filter
     var kalmanArray = kalmanFilter(pcgYArrayData, 5000, 1000);
-    drawGraph(kalmanArray, 5, "Filtered PCG - Kalman Filter")
+    drawGraph(kalmanArray, 5, "Filtered PCG - Kalman Filter");
 
     //Shannon energy
-    for (var i = 0; i < kalmanArray.length; ++i) { //using kalman filtered PCG signal for noise reduction
-        var inp;
-        if (Math.pow(kalmanArray[i], 2) == 0) {
-            // since log of 0 is undefined
-            inp = 0;
-        }
-        else {
-            inp = Math.pow(0-kalmanArray[i], 2) * Math.log(Math.pow(kalmanArray[i], 2)) / 1000000;
-        }
-        shannArr.push(inp);
-    }
+    produceShannonEnergy(kalmanArray);
     console.log("Shannon Energy");
     console.log(shannArr);
     //making a copy of the shannonEnergy output as we want to sort the array, but not affect the original array
-    var newArray = sortArray(shannArr.slice())
+    var newArray = sortArray(shannArr.slice());
     //array for the maxima of the shannon array
     var newMax = [];
     //we want to have the same number of maxima as the number of R peaks in the raw ECG data
@@ -306,11 +280,11 @@ function showPCG(patientKey, intervalValue) {
         newMax.push(newArray[i]);
     }
     //computing average of the peaks (potentially S1's) to get a threshold for the peak detection of s1 and s2
-    var avg = getAverage(newMax)
+    var avg = getAverage(newMax);
     //the threshold is usually sufficient as 1/4 of the average of the maxima
     var threshold = avg / 4;
-    console.log("Shannon threshold")
-    console.log(threshold)
+    console.log("Shannon threshold");
+    console.log(threshold);
     sNoiseArray = [];
     //looping through the shannon array data to find values above the threshold; these are added to the sNoiseArray
     for (var i = 0; i < shannArr.length; ++i) {
@@ -318,66 +292,94 @@ function showPCG(patientKey, intervalValue) {
             sNoiseArray.push(i);
         }
     }
-    console.log("SNoises");
-    console.log(sNoiseArray);
 
-    //cleaning up peaks within 0.25 seconds (they are likely to belong to the same peak)
-    newSNoiseArray = [];
+    //cleaning up peaks within 0.25 seconds (they are likely to belong to the same peak / noise)
+    newSNoiseArray = cleanUpSNoiseArray(sNoiseArray)
+    console.log('newSNoiseArray');
+    console.log(newSNoiseArray);
 
-    //instead of having multiple crosses marking an S point we want just one mark
-    for (var i = 0; i < sNoiseArray.length; ++i) {
+    //draw the Shannon Energy graph, marking the S sounds that have been detected
+    drawGraph(shannArr, 6, "Shannon Energy");
+}
+
+/**
+ * Produce Shannon's energy of the signal array that is passed in as parameter.
+ * @param {array} arrayIn - The array that should be manipulated and used to produce Shannon's energy.
+ */
+function produceShannonEnergy(arrayIn) {
+    for (var i = 0; i < arrayIn.length; ++i) { //using kalman filtered PCG signal for noise reduction
+        var shannVal;
+        if (Math.pow(arrayIn[i], 2) == 0) {
+            // since log of 0 is undefined
+            shannVal = 0;
+        }
+        else {
+            shannVal = Math.pow(0 - arrayIn[i], 2) * Math.log(Math.pow(arrayIn[i], 2)) / 1000000;
+        }
+        shannArr.push(shannVal);
+    }
+}
+
+/**
+ * Reduce the input array to only contain one mark for each sound. Instead of having multiple crosses marking an S point we want just one mark: the maximum.
+ * @param {array} arrayIn - The array that contains all values in the Shannon's energy array that are above the specified threshold.
+ * @return {array} The final array containing all detected S sounds.
+ */
+function cleanUpSNoiseArray(arrayIn) {
+    var arrayToReturn = [];
+    for (var i = 0; i < arrayIn.length; ++i) {
           var tmpArray = [];
-          tmpArray.push(sNoiseArray[i]);
+          tmpArray.push(arrayIn[i]);
           var index = i;
-          var sNoiseToCompare = sNoiseArray[index];
-          while (sNoiseArray[index+1] * intervalValue < ((sNoiseToCompare * intervalValue) + 0.25)) {
-              tmpArray.push(sNoiseArray[index + 1]);
-              sNoiseToCompare = sNoiseArray[index + 1];
+          var sNoiseToCompare = arrayIn[index];
+          while (arrayIn[index+1] * interval < ((sNoiseToCompare * interval) + 0.25)) {
+              tmpArray.push(arrayIn[index + 1]);
+              sNoiseToCompare = arrayIn[index + 1];
               ++index;
           }
 
           //find the largest element of the group of the SNoises
-          var tmpArray2 = [] //need to get the y values from the shannonEnergy array, as the tmpArray only contains the index of the datapoint
+          var tmpArray2 = []; //need to get the y values from the shannonEnergy array, as the tmpArray only contains the index of the datapoint
           for (var j = 0; j < tmpArray.length; ++j) {
-              tmpArray2[j] = shannArr[tmpArray[j]]
+              tmpArray2[j] = shannArr[tmpArray[j]];
           }
 
-          var max = Math.max(...tmpArray2)
+          var max = Math.max(...tmpArray2);
           var maxIndex = tmpArray2.indexOf(max);
 
           //add the largest element to the final array
           if (tmpArray.length != 1) {
-              newSNoiseArray.push(tmpArray[maxIndex]);
+              arrayToReturn.push(tmpArray[maxIndex]);
           }
           else {
-              newSNoiseArray.push(tmpArray[0]);
+              arrayToReturn.push(tmpArray[0]);
           }
           i += tmpArray.length - 1;
 
     }
-    console.log('newSNoiseArray');
-    console.log(newSNoiseArray);
+    return arrayToReturn;
+}
 
-    drawGraph(shannArr, 6, "Shannon Energy");
-
-    //Fast Fourier Transform
+/**
+ * Produce the FFT of the pcgYArrayData array. This output is then plotted in a graph.
+ */
+function fastFourierTransform() {
     var newArr = new Float64Array(4096); //4096 for full range, 256 for first two sounds
     //4096 because it has to be a power of 2
     for (var i = 0; i < 4096; ++i) {
-        newArr[i] = pcgYArrayData[i]
+        newArr[i] = pcgYArrayData[i];
     }
-    var mean = getAverage(newArr)
+    var mean = getAverage(newArr);
 
     for (var i = 0; i < 4096; ++i) { //removing the mean from each datapoint in order to remove DC component
-        newArr[i] -= mean
+        newArr[i] -= mean;
     }
     var fft = new dsp.FFT(4096, 200);
     fft.forward(newArr);
     var spectrum = fft.spectrum;
-    console.log("Fourier")
-    console.log(spectrum)
+    console.log("Fourier");
+    console.log(spectrum);
     drawGraph(spectrum, 3, "Fast Fourier Transform");
-
 }
 
 /**
@@ -396,36 +398,36 @@ function heartRateCalculation() {
     //peak detection & bpm for raw ECG
 
     //retrieving the 25 largest y values in the data array & making a copy of yArrayData array
-    var arrayOfMaxes = retrieveLargestDatapoints(yArrayData.slice())
+    var arrayOfMaxes = retrieveLargestDatapoints(yArrayData.slice());
 
     //taking the average of all values in the array of maxima
-    var avg = getAverage(arrayOfMaxes)
+    var avg = getAverage(arrayOfMaxes);
 
-    var squareOfAvg = avg * avg
+    var squareOfAvg = avg * avg;
 
     //threshold above which R peaks should be detected: 1/4 of the square of the average
-    var threshold = squareOfAvg / 4
+    var threshold = squareOfAvg / 4;
 
     //array containing the square of the signal
-    var squaredArray = squareArray(xyArrayData)
+    var squaredArray = squareArray(xyArrayData);
 
-    var arrayOfValuesGreaterThanThreshold = []
+    var arrayOfValuesGreaterThanThreshold = [];
     for (var i = 0; i < squaredArray.length; ++i) {
-        var val = squaredArray[i].y
+        var val = squaredArray[i].y;
         if (val > threshold) {
             arrayOfValuesGreaterThanThreshold.push({
                 x: squaredArray[i].x, // dividing by 1 otherwise strings will be stored
                 y: val.toFixed(3)/1
-            })
+            });
         }
     }
 
     //now need to get rid of the values that belong to the same R peak but are not the maximum of that peak
-    xyArraySpikes = getRidOfSamePeakPoints(arrayOfValuesGreaterThanThreshold, interval)
+    xyArraySpikes = getRidOfSamePeakPoints(arrayOfValuesGreaterThanThreshold, interval);
     console.log('xyArray spikes');
     console.log(xyArraySpikes);
     //beats per minute can now be calculated using the number of peaks in the 30 second period
-    var bpm = calculateBPM(xyArraySpikes, xyArrayData[xyArrayData.length - 1].x)
+    var bpm = calculateBPM(xyArraySpikes, xyArrayData[xyArrayData.length - 1].x);
     console.log(bpm+'bpm');
     document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + Math.round(bpm) + "bpm";
 
@@ -437,16 +439,16 @@ function heartRateCalculation() {
  * @return {array} The array containing the 25 largest elements.
  */
 function retrieveLargestDatapoints(arrayIn) {
-    var returnArray = []
+    var returnArray = [];
     for (var i = 0; i < 25; ++i) {
-        var max = Math.max(...arrayIn)
-        returnArray.push(max)
-        var indexOfMax = arrayIn.indexOf(max)
+        var max = Math.max(...arrayIn);
+        returnArray.push(max);
+        var indexOfMax = arrayIn.indexOf(max);
         if (indexOfMax > -1) {
-            arrayIn.splice(indexOfMax, 1)
+            arrayIn.splice(indexOfMax, 1);
         }
     }
-    return returnArray
+    return returnArray;
 }
 
 /**
@@ -457,9 +459,9 @@ function retrieveLargestDatapoints(arrayIn) {
 function getAverage(arrayIn) {
     var sum = 0;
     for (var i = 0; i < arrayIn.length; ++i) {
-        sum += arrayIn[i]
+        sum += arrayIn[i];
     }
-    return sum / arrayIn.length
+    return sum / arrayIn.length;
 }
 
 /**
@@ -469,8 +471,8 @@ function getAverage(arrayIn) {
  * @return {number} The number of spikes per minute or the number of beats per minute.
  */
 function calculateBPM(maximaArray, lengthOfRecording) {
-    var spikesPerTenSeconds = maximaArray.length / lengthOfRecording * 10
-    return spikesPerTenSeconds * 6
+    var spikesPerTenSeconds = maximaArray.length / lengthOfRecording * 10;
+    return spikesPerTenSeconds * 6;
 }
 
 /**
@@ -479,16 +481,16 @@ function calculateBPM(maximaArray, lengthOfRecording) {
  * @return {array} The squared array.
  */
 function squareArray(arrayToBeSquared) {
-    var returnArray = []
+    var returnArray = [];
     for (var i = 0; i < arrayToBeSquared.length; ++i) {
         if (arrayToBeSquared[i].y > 0) { //otherwise negative values over 1 get added, as the square of a negative becomes positive
             returnArray.push({
                 x: arrayToBeSquared[i].x,
                 y: arrayToBeSquared[i].y * arrayToBeSquared[i].y
-            })
+            });
         } //else the value will no be an r peak, as a negative or 0 amplitude, so this case can be neglected
     }
-    return returnArray
+    return returnArray;
 }
 
 /**
@@ -497,30 +499,30 @@ function squareArray(arrayToBeSquared) {
  * @return {array} The final array including all final R-peaks.
  */
 function getRidOfSamePeakPoints(arrayIn, intervalValue) {
-    var maximaArray = []
-    var tmpArray = []
+    var maximaArray = [];
+    var tmpArray = [];
 
     for (var i = 0; i < arrayIn.length; ++i) {
             //console.log(parseFloat(arrayIn[i+1].x))
             //console.log(parseFloat((arrayIn[i].x + intervalValue)))
             if (i != arrayIn.length - 1 && parseFloat(arrayIn[i+1].x) == parseFloat((arrayIn[i].x + intervalValue).toFixed(3))) {
 
-                    tmpArray.push(arrayIn[i])
+                    tmpArray.push(arrayIn[i]);
 
             } else if (i == arrayIn.length - 1 && tmpArray.length == 0) {
 
                     maximaArray.push({
                         x: arrayIn[i].x,
                         y: Math.sqrt(arrayIn[i].y)
-                    })
+                    });
 
             } else {
 
-                    tmpArray.push(arrayIn[i])
-                    var maxDatapoint = tmpArray[0]
+                    tmpArray.push(arrayIn[i]);
+                    var maxDatapoint = tmpArray[0];
                     for (var j = 1; j < tmpArray.length; ++j) {
                       if (tmpArray[j].y > maxDatapoint.y) {
-                        maxDatapoint = tmpArray[j]
+                        maxDatapoint = tmpArray[j];
                       }
                     }
 
@@ -528,14 +530,12 @@ function getRidOfSamePeakPoints(arrayIn, intervalValue) {
                     maximaArray.push({
                         x: maxDatapoint.x,
                         y: Math.sqrt(maxDatapoint.y)
-                    })
-                    tmpArray = []
-
+                    });
+                    tmpArray = [];
             }
     }
-    return maximaArray
+    return maximaArray;
 }
-
 
 
 /**
@@ -595,43 +595,56 @@ function ECGSignalProcessing(intervalValue) {
     var rrIntervalsDiff = (Math.max(...rrIntervalsArray) - Math.min(...rrIntervalsArray))*1000;
     console.log('rrIntervalsAvg');
     console.log(avgRRInterval * 1000);
-    console.log('RR Max - Min:')
-    console.log(rrIntervalsDiff)
-    console.log('qrsComplexAvg')
-    console.log(qrsIntervalsSum / (xyArraySpikes.length - 2))
+    console.log('RR Max - Min:');
+    console.log(rrIntervalsDiff);
+    console.log('qrsComplexAvg');
+    console.log(qrsIntervalsSum / (xyArraySpikes.length - 2));
 
     document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(avgRRInterval * 1000) + " ms";
     document.getElementById("HRV").innerHTML = "Heart Rate Variability (difference between max and min R-R): " + Math.round(rrIntervalsDiff) + " ms";
     document.getElementById("QRSComplexParagraph").innerHTML = "Q-R-S complex: " + Math.round(qrsIntervalsSum / (xyArraySpikes.length - 2)) + " ms";
 
-    //for SDNN
-    var newArr = [];
-    var newArrSum = 0;
-    for (var i = 0; i < rrIntervalsArray.length; ++i) {
-        newArrSum += Math.pow((rrIntervalsArray[i]*1000 - avgRRInterval*1000), 2);
-    }
-    var newArrAvg = newArrSum / rrIntervalsArray.length;
-    var SDNNval = Math.sqrt(newArrAvg);
-    document.getElementById("SDNN").innerHTML = "SDNN: " + Math.round(SDNNval) + " ms";
-
-    //for RMSSD
-    var newArr2 = [];
-    var newArrSum2 = 0;
-    for (var i = 0; i < rrIntervalsArray.length - 1; ++i) {
-        newArrSum2 += Math.pow((rrIntervalsArray[i]*1000 - rrIntervalsArray[i+1]*1000), 2);
-    }
-    var newArrAvg2 = newArrSum2 / rrIntervalsArray.length - 1;
-    var RMSSDval = Math.sqrt(newArrAvg2);
-    document.getElementById("RMSSD").innerHTML = "RMSSD: " + Math.round(RMSSDval) + " ms";
+    SDNN(rrIntervalsArray, avgRRInterval);
+    RMSSD(rrIntervalsArray);
 
 }
 
+/**
+ * Calculate the standard deviation of all NN / RR intervals.
+ * @param {array} arrayIn - The array containing all NN intervals.
+ * @param {number} avg - The average value of all NN intervals.
+ */
+function SDNN(arrayIn, avg) {
+    var newArr = [];
+    var newArrSum = 0;
+    for (var i = 0; i < arrayIn.length; ++i) {
+        newArrSum += Math.pow((arrayIn[i]*1000 - avg*1000), 2);
+    }
+    var newArrAvg = newArrSum / arrayIn.length;
+    var SDNNval = Math.sqrt(newArrAvg);
+    document.getElementById("SDNN").innerHTML = "SDNN: " + Math.round(SDNNval) + " ms";
+}
+
+/**
+ * Calculate root mean square of successive differences between each R peak.
+ * @param {array} arrayIn - The array containing all NN / RR intervals.
+ */
+function RMSSD(arrayIn) {
+    var newArr = [];
+    var newArrSum = 0;
+    for (var i = 0; i < arrayIn.length - 1; ++i) {
+        newArrSum += Math.pow((arrayIn[i]*1000 - arrayIn[i+1]*1000), 2);
+    }
+    var newArrAvg = newArrSum / arrayIn.length - 1;
+    var RMSSDval = Math.sqrt(newArrAvg);
+    document.getElementById("RMSSD").innerHTML = "RMSSD: " + Math.round(RMSSDval) + " ms";
+}
 
 /**
  * Apply the Kalman Filter for the signal that is passed in as a parameter using the specified R and Q values.
  * @param {array} arrayIn - The array that contains the data to be filtered.
- * @param {number} rIn - The specified value for R for the filter.
- * @param {number} qIn - The specified value for Q for the filter.
+ * @param {number} rIn - The specified value for R for the filter = process noise: how much noise is expected from the system itself?
+ * @param {number} qIn - The specified value for Q for the filter = measurement noise: how much noise is caused by the measurements?
  * @return {array} The filtered array.
  */
 function kalmanFilter(arrayIn, rIn, qIn) {
@@ -653,7 +666,7 @@ function lowPassFilter(arrayIn) {
     for (var i = 0; i < arrayIn.length; ++i) {
         lpfPreArrayData[i] = arrayIn[i] * 1000;
     }
-    lpf.smoothing = 0.1;
+    lpf.smoothing = 0.1; //this value provides best results
     lpfArray = lpf.smoothArray(lpfPreArrayData);
     console.log("Low Pass");
     console.log(lpfArray);
@@ -674,35 +687,32 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
   var myDataPoints = [];
   var time = 0;
   for (var i = 0; i < arrayIn.length; i++) {
-
-            if (chartContainerNumber == 1) { //ECG
-                myDataPoints.push({
-                    x: time,
-                    y: parseFloat(arrayIn[i])*1
-                });
-            }
-
-            else if (chartContainerNumber == 2) { //PCG
-                myDataPoints.push({
-                    x: time,
-                    y: arrayIn[i].y/1000
-                });
-            }
-
-            else if (chartContainerNumber == 3) { //FFT
-                myDataPoints.push({
-                    x: time / interval * 200 / arrayIn.length, //since the frequency of each (n) FFT plot is n * Fs / N, where Fs is the sample rate and N the size of the FFT array
-                    y: parseFloat(arrayIn[i])/100
-                });
-            }
-
-            else {
-                myDataPoints.push({
-                    x: time,
-                    y: parseFloat(arrayIn[i])/1000
-                });
-            }
-            time += interval;
+          switch(chartContainerNumber) {
+              case 1: //ECG
+                  myDataPoints.push({
+                      x: time,
+                      y: parseFloat(arrayIn[i])*1
+                  });
+              break;
+              case 2: //PCG
+                  myDataPoints.push({
+                      x: time,
+                      y: arrayIn[i].y/1000
+                  });
+              break;
+              case 3: //FFT
+                  myDataPoints.push({
+                      x: time / interval * 200 / arrayIn.length, //since the frequency of each (n) FFT plot is n * Fs / N, where Fs is the sample rate and N the size of the FFT array
+                      y: parseFloat(arrayIn[i])/100
+                  });
+              break;
+              default:
+                  myDataPoints.push({
+                      x: time,
+                      y: parseFloat(arrayIn[i])/1000
+                  });
+          }
+          time += interval;
   }
   dataSeries.dataPoints = myDataPoints;
   data.push(dataSeries);
