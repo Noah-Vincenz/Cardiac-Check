@@ -48,6 +48,10 @@ The public folder contains a file called RPeakAlgorithmTesting. This again conta
 
 The mobile application was build on XCode implemented in Swift 3. In order to run the application XCode needs to be installed on the machine. This can only be download for MacOS and the download link can be retrieved on [Apple's website](https://developer.apple.com/download/). This also requires the downloader to have an Apple ID. Once XCode has been successfully installed, .../.../Mobile_App/mobApp.xcworkspace can be opened using XCode. Once in XCode, the application can be either tested or run by navigating to the Product menu > Run or Product menu > Test (Note that an iPhone iOS simulator should be selected).
 
+#### Testing the Web Application
+
+In /public call jasmine and it will run the tests inside the spec folder.
+
 
 ## Authors
 

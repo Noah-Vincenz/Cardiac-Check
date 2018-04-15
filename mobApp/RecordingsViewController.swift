@@ -31,6 +31,7 @@ class RecordingsViewController: UIViewController {
     let databaseRef = Database.database().reference()
     // Create a storage reference from the Firebase storage service
     let storageRef = Storage.storage().reference()
+    var interval = 0.000 //the time interval at which samples were taken
     
     // MARK: - Parent methods
     
@@ -98,21 +99,23 @@ class RecordingsViewController: UIViewController {
                 
                 let x = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)! as String
                 let newX = x.reduceWhitespaces() //removing multiple whitespace chars
-                let xArr = newX.split{$0 == " "}.map(String.init) //splitting the text by the single white space char
+                let words = newX.split{$0 == " "}.map(String.init) //splitting the text by the single white space char
                 
                 var ecgData = [(Double, Double)]()
                 var pcgData = [(Double, Double)]()
-                var time: Double = 0
-                
+                var time: Double = 0.000
+                let unrounded = Double(words[6])! - Double(words[3])! //detects the sampling rate of the recording
+                self.interval = Double(round(1000*unrounded)/1000)
+
                 //looping through the file
-                for i in 3...xArr.count-1 {
+                for i in 3...words.count-1 {
 
                     if i % 3 == 1 { //ie. 4, 7, 10 - these are all ECG values
-                        ecgData.append((time, Double(xArr[i])!))
+                        ecgData.append((time, Double(words[i])!))
                     }
                     if i % 3 == 2 { //ie. 5, 8, 11 - these are all PCG values
-                        pcgData.append((time, Double(xArr[i])!))
-                         time += 0.005
+                        pcgData.append((time, Double(words[i])!))
+                        time += self.interval
                     }
                 }
                 self.drawChart(dataPoints: ecgData, viewToPlot: 1)
@@ -221,7 +224,7 @@ class RecordingsViewController: UIViewController {
         var maxArray = [(Double, Double)]()
         var tmpArray = [(Double, Double)]()
         for i in 0...arrayOfValuesGreaterThanThreshold.count - 1 {
-            if i != arrayOfValuesGreaterThanThreshold.count - 1 && arrayOfValuesGreaterThanThreshold[i+1].0 == arrayOfValuesGreaterThanThreshold[i].0 + 0.005 {
+            if i != arrayOfValuesGreaterThanThreshold.count - 1 && arrayOfValuesGreaterThanThreshold[i+1].0 == arrayOfValuesGreaterThanThreshold[i].0 + interval {
                 
                     tmpArray.append(arrayOfValuesGreaterThanThreshold[i])
                 
