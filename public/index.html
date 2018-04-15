@@ -2,86 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>ECG</title>
-  <!-- <link rel="stylesheet" type="text/css" href="main.css" /> -->
-  <style>
-      table {
-          font-family: arial, sans-serif;
-          border-collapse: collapse;
-          width: 100%;
-      }
-
-      td, th {
-          border: 1px solid #dddddd;
-          text-align: left;
-          padding: 8px;
-      }
-
-      tr:nth-child(even) {
-          background-color: #dddddd;
-      }
-  </style>
+  <title>Cardiac Check</title>
+  <link rel="stylesheet" type="text/css" href="main.css" />
 </head>
 <body>
-<!-- for firebase database -->
-<pre id="object">
-
-</pre>
-<div id="topContainer">
-    <p>
-        <B>Select a patient:</B> <BR>
-        <select id="patients_selection" onchange="changeDataShown(getSelectedUser())" NAME="Patient">
-        </select>
-    </p>
+<div id="outerContainer">
+    <div id="headerContainer">
+        <h1>Cardiac Check™</h1>
+    </div>
+    <div id="patientContainer">
+        <div id="selectContainer">
+            <p>
+                <label>Select a patient:</label>
+                <br />
+                <select id="patients_selection" onchange="changeDataShown(getSelectedUser())" NAME="Patient">
+                </select>
+            </p>
+        </div>
+        <div id="tableContainer">
+            <p>
+                <table id="my_table">
+                    <thead id="table_head">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>DOB</th>
+                            <th>Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table_body">
+                    </tbody>
+                </table>
+            </p>
+        </div>
+    </div>
+    <div id="chartContainer1" style="height:270px; width: 100%;"></div>
+    <div id="chartContainer2" style="height:270px; width: 100%;"></div>
+    <div id="chartContainer3" style="height:270px; width: 100%;"></div>
+    <div id="measurementsContainer">
+            <ul id="d1">
+                <li id="heartRateParagraph" font-size: 45px;></li>
+                <li id="QRSComplexParagraph" font-size: 45px;></li>
+                <li id="RRIntervalParagraph" font-size: 45px;></li>
+            </ul>
+            <ul id="d2">
+                <li id="HRV" font-size: 45px;></li>
+                <li id="SDNN" font-size: 45px;></li>
+                <li id="RMSSD" font-size: 45px;></li>
+            </ul>
+    </div>
+    <div id="chartContainer4" style="height:270px; width: 100%;"></div>
+    <div id="chartContainer5" style="height:270px; width: 100%;"></div>
+    <div id="chartContainer6" style="height:270px; width: 100%;"></div>
+    <div id="messageContainer">
+        <p>
+            <label for="from">Your message to the patient:</label>
+            <br /> <!-- this puts the label right on top of the textArea -->
+            <textarea id="textArea" name="message" onclick="this.value=''">Enter your message here...</textarea>
+            <button id="sendButton" onclick="submitText(getSelectedUser())" type="button" >Send</button>
+        </p>
+    </div>
 </div>
-<!-- tr==tablerow, td==datacell -->
-<div id="tableContainer">
-    <p>
-      <table id="my_table">
-        <thead id="table_head">
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>DOB</th>
-            <th>Weight</th>
-          </tr>
-        </thead>
-        <tbody id="table_body">
-        </tbody>
-      </table>
-    </p>
-</div>
-<div id="chartContainer1" style="height:270px; width: 100%;"></div>
-<div id="InfoContainer" style="height: 300px; width: 100%;">
-    <p id="heartRateParagraph" font-size: 45px;></p>
-    <p id="HRV" font-size: 45px;></p>
-    <p id="SDNN" font-size: 45px;></p>
-    <p id="RMSSD" font-size: 45px;></p>
-    <p id="PRIntervalParagraph" font-size: 45px;></p>
-    <p id="QRSComplexParagraph" font-size: 45px;></p>
-    <p id="QTIntervalParagraph" font-size: 45px;></p>
-    <p id="RRIntervalParagraph" font-size: 45px;></p>
-    <p id="STIntervalParagraph" font-size: 45px;></p>
-</div>
-<div id="chartContainer2" style="height:270px; width: 100%;"></div>
-<div id="chartContainer3" style="height:270px; width: 100%;"></div>
-<div id="chartContainer4" style="height:270px; width: 100%;"></div>
-<div id="chartContainer5" style="height:270px; width: 100%;"></div>
-<div id="chartContainer6" style="height:270px; width: 100%;"></div>
-<div id="chartContainer7" style="height:270px; width: 100%;"></div>
-<div id="textContainer">
-    <p>
-        <label for="from">Your message to the patient:</label>
-        <br /> <!-- this puts the label right on top of the textArea -->
-        <textarea id="textArea" name="message" style="height: 260px; width: 100%;" onclick="this.value=''" >Enter your message here...
-        </textarea>
-        <button id="sendButton" onclick="submitText(getSelectedUser())" type="button" style="height: 30px; width: 70px;" >Send</button>
-    </p>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/4.9.1/firebase.js"></script>
 <script>
-  // Initialize Firebase
+  // Initialize Firebase, this is taken from the Firebase website
   var config = {
     apiKey: "AIzaSyDzFIjvkdLZg81wjBt-4MURRQNX6qG1ofw",
     authDomain: "mobapp-f7b3b.firebaseapp.com",
@@ -92,8 +76,6 @@
   };
   firebase.initializeApp(config);
 </script>
-
-
 
 <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
 <script src="bundle.js" charset="utf-8"></script>

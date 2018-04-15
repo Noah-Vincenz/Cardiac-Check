@@ -35,22 +35,23 @@ function updateGraphs(patientKey) {
                                 //start at index i = 4, as up to that is just description of the file
                                 for (var i = 1; i < words.length; i++) {
                                       if (i % 2 == 0) { //ie. 4, 7, 10 - these are all ECG values
+                                        var x = words[i] // of format 0:00.000
+                                        var y = words[i].split("")
+                                        var timeString = y[2]+y[3]+y[4]+y[5]+y[6]+y[7]
+                                        time = parseFloat(timeString)
+                                      }
+                                      else { //ie. 5, 8, 11 - these are all PCG values
+
+
                                           xyArrayData.push({
                                               x: time,
                                               y: parseFloat(words[i]).toFixed(3)*1
                                           })
                                           yArrayData.push(parseFloat(words[i]).toFixed(3)*1)
-                                      }
-                                      else { //ie. 5, 8, 11 - these are all PCG values
-                                          var x = words[i] // of format 0:00.000
-                                          var y = words[i].split("")
-                                          var timeString = y[2]+y[3]+y[4]+y[5]+y[6]+y[7]
-                                          time = parseFloat(timeString)
 
                                       }
                                 }
-                                console.log('xyArrayData');
-                                console.log(xyArrayData);
+
                                 drawGraph(xyArrayData, 1, "ECG")
 
                                 //ECG heart rate calculation
@@ -78,9 +79,12 @@ function heartRateCalculation() {
 
     //taking the average of all values in the array of maxima
     var avg = getAverage(arrayOfMaxes)
+
     var squareOfAvg = avg * avg
+
+
     //threshold above which R peaks should be detected: 1/3 of the square of the average
-    var threshold = squareOfAvg / 3
+    var threshold = squareOfAvg / 4
 
     //array containing the square of the signal
     var squaredArray = squareArray(xyArrayData)
@@ -102,22 +106,18 @@ function heartRateCalculation() {
     console.log(xyArraySpikes);
     //beats per minute can now be calculated using the number of peaks in the 30 second period
     var bpm = calculateBPM(xyArraySpikes, xyArrayData[xyArrayData.length - 1].x)
-    console.log(bpm+'bpm');
     document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + Math.round(bpm) + "bpm";
-    for (var i = 0; i < xyArraySpikes.length; ++i) {
-      console.log(xyArraySpikes[i].x)
-    }
 
 }
 
 /**
- * Retrieve the 15 largest elements wihin a one dimensional array of numbers.
+ * Retrieve the 25 largest elements wihin a one dimensional array of numbers.
  * @param {array} arrayIn - The array of numbers to be used.
- * @return {array} The array containing the 15 largest elements.
+ * @return {array} The array containing the 25 largest elements.
  */
 function retrieveLargestDatapoints(arrayIn) {
     var returnArray = []
-    for (var i = 0; i < 15; ++i) {
+    for (var i = 0; i < 25; ++i) {
         var max = Math.max(...arrayIn)
         returnArray.push(max)
         var indexOfMax = arrayIn.indexOf(max)
@@ -176,8 +176,7 @@ function squareArray(arrayToBeSquared) {
  * @return {array} The final array including all final R-peaks.
  */
 function getRidOfSamePeakPoints(arrayIn) {
-    console.log("arrayin")
-    console.log(arrayIn)
+
     var maximaArray = []
     var tmpArray = []
     for (var i = 0; i < arrayIn.length; ++i) {
@@ -206,8 +205,6 @@ function getRidOfSamePeakPoints(arrayIn) {
                         x: maxDatapoint.x,
                         y: Math.sqrt(maxDatapoint.y)
                     })
-                    console.log(tmpArray)
-                    console.log("\n")
                     tmpArray = []
 
             }
@@ -222,8 +219,6 @@ function drawGraph(arrayIn, chartContainerNumber, titleIn) {
   var dataSeries = { type: "line", color: "black" };
   var myDataPoints = arrayIn;
 
-  console.log("myDataPoints")
-  console.log(myDataPoints)
   dataSeries.dataPoints = myDataPoints;
   data.push(dataSeries);
   var chart = new CanvasJS.Chart("chartContainer"+chartContainerNumber.toString(), {
