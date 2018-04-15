@@ -40,13 +40,19 @@ class RecordingsViewControllerTests: XCTestCase {
         XCTAssertEqual(viewController.average(arr: array1), 4.9)
         let array2 = [5,1,3,1.0,5]
         XCTAssertEqual(viewController.average(arr: array2), 3)
-
+        let array3 = [4,5,9,11,57,22.6,7,4]
+        XCTAssertEqual(viewController.average(arr: array3), 14.95)
     }
     
     func testReduceWhitespaces() {
         let viewController = RecordingsViewController()
-        let str = "S    T s   f   sfd  d"
-        XCTAssertEqual(viewController.reduceWhitespaces(str: str), "S T s f sfd d")
+        let str1 = "S    T s   f   sfd  d"
+        let str2 = "  s"
+        let str3 = "123 sdmdm 2   3 4    4"
+        XCTAssertEqual(viewController.reduceWhitespaces(str: str1), "S T s f sfd d")
+        XCTAssertEqual(viewController.reduceWhitespaces(str: str2), "s")
+        XCTAssertEqual(viewController.reduceWhitespaces(str: str3), "123 sdmdm 2 3 4 4")
+
     }
     
     func testMessagesPerformance() {
