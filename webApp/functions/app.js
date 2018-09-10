@@ -1,7 +1,0 @@
-(function () {
-
-//Initialise Firebase
-
-
-
-}
