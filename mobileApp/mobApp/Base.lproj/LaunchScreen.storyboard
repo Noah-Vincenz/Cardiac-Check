@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="EHf-IW-A2E">
+            <objects>
+                <viewController id="01J-lp-oVM" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="w78-Op-U4I">
+                                <rect key="frame" x="27" y="132" width="321" height="173"/>
+                                <subviews>
+                                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icon" translatesAutoresizingMaskIntoConstraints="NO" id="0TS-ql-XaC">
+                                        <rect key="frame" x="74" y="0.0" width="173" height="173"/>
+                                    </imageView>
+                                </subviews>
+                                <color key="backgroundColor" red="0.46202266219999999" green="0.83828371759999998" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstItem="0TS-ql-XaC" firstAttribute="top" secondItem="w78-Op-U4I" secondAttribute="top" id="Ixl-SS-ijP"/>
+                                    <constraint firstItem="0TS-ql-XaC" firstAttribute="leading" secondItem="w78-Op-U4I" secondAttribute="leading" constant="74" id="RQi-uS-qFv"/>
+                                    <constraint firstAttribute="bottom" secondItem="0TS-ql-XaC" secondAttribute="bottom" id="cZN-lC-gdz"/>
+                                    <constraint firstAttribute="trailing" secondItem="0TS-ql-XaC" secondAttribute="trailing" constant="74" id="xza-7U-I9s"/>
+                                </constraints>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Cardiac Check™" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aC8-QG-zck">
+                                <rect key="frame" x="0.0" y="95" width="375" height="46"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="38"/>
+                                <color key="textColor" red="0.0" green="0.32852089410000002" blue="0.57488495110000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Version 1.0.0" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LjD-ck-W6g">
+                                <rect key="frame" x="0.0" y="302" width="375" height="23"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="19"/>
+                                <color key="textColor" red="0.0" green="0.32852089410000002" blue="0.57488495110000004" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.46202266219999999" green="0.83828371759999998" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="LjD-ck-W6g" secondAttribute="trailing" id="36h-z4-gKk"/>
+                            <constraint firstItem="w78-Op-U4I" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="27" id="7Gz-XS-FiR"/>
+                            <constraint firstItem="aC8-QG-zck" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="AJf-Du-ES6"/>
+                            <constraint firstItem="LjD-ck-W6g" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="Atd-gn-nWV"/>
+                            <constraint firstItem="w78-Op-U4I" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="112" id="Ati-av-Ccf"/>
+                            <constraint firstItem="aC8-QG-zck" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="75" id="GDH-Ca-lUv" userLabel="Cardiac Check.top = Safe Area.top + 75"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="w78-Op-U4I" secondAttribute="trailing" constant="27" id="WWi-fO-alC"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="aC8-QG-zck" secondAttribute="trailing" id="aXF-OM-hVW"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="w78-Op-U4I" secondAttribute="bottom" constant="362" id="g3V-dQ-K7M"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="LjD-ck-W6g" secondAttribute="bottom" constant="342" id="ow2-Hn-4UE"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="52" y="374.66266866566718"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="icon" width="150" height="150"/>
+    </resources>
+</document>
