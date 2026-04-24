@@ -60,18 +60,11 @@ class LoginViewController: UIViewController {
         
             Auth.auth().signIn(withEmail: patientIDTextField.text!, password: passwordTextField.text!, completion: {(user, error) in
                 if user != nil { //login has been successful
-                   
+
                     self.errorLabel.text = ""
                     self.performSegue(withIdentifier: "segueToRecordings", sender: self) //transition to the next view
-                    
+
                 } else { //unsuccessful
-                    
-                    if let myError = error?.localizedDescription {
-                        print(myError) // gives more information
-                    
-                    } else {
-                        print("Error")
-                    }
                     self.errorLabel.text = "Login unsuccessful"
                 }
             })

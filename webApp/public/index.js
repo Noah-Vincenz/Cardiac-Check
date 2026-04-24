@@ -162,27 +162,8 @@ function updateGraphs(patientKey) {
                           }
 
                     }
-                    console.log('xyArrayData');
-                    console.log(xyArrayData);
-                    console.log('yArrayData');
-                    console.log(yArrayData);
-                    console.log('pcgArrayData');
-                    console.log(pcgArrayData);
-                    console.log('pcgYArrayData');
-                    console.log(pcgYArrayData);
-
                     //THE FOLLOWING MUST BE CALLED INSIDE OF THIS FUNCTION BECAUSE OF ITS ASYNCHRONOUS NATURE
                     heartRateCalculation();
-                    //for high pass filter uncomment below
-                    /*
-                    var copyOfArr = new Float64Array(yArrayData.length);
-                    for (var i = 0; i < yArrayData.length-1; ++i) {
-                        copyOfArr[i] = yArrayData[i];
-                    }
-                    var filter = new dsp.IIRFilter(dsp.HIGHPASS, 1, 1, 200);
-                    filter.process(copyOfArr)
-                    drawGraph(copyOfArr, 2, "High Pass Filter");
-                    */
                     drawGraph(yArrayData, 1, "ECG"); //ECG
                     ECGSignalProcessing(interval);
                     drawGraph(pcgArrayData, 2, "PCG");
@@ -269,8 +250,6 @@ function processPCG(patientKey, intervalValue) {
 
     //Shannon energy
     produceShannonEnergy(kalmanArray);
-    console.log("Shannon Energy");
-    console.log(shannArr);
     //making a copy of the shannonEnergy output as we want to sort the array, but not affect the original array
     var newArray = sortArray(shannArr.slice());
     //array for the maxima of the shannon array
@@ -283,8 +262,6 @@ function processPCG(patientKey, intervalValue) {
     var avg = getAverage(newMax);
     //the threshold is usually sufficient as 1/4 of the average of the maxima
     var threshold = avg / 4;
-    console.log("Shannon threshold");
-    console.log(threshold);
     sNoiseArray = [];
     //looping through the shannon array data to find values above the threshold; these are added to the sNoiseArray
     for (var i = 0; i < shannArr.length; ++i) {
@@ -295,9 +272,6 @@ function processPCG(patientKey, intervalValue) {
 
     //cleaning up peaks within 0.25 seconds (they are likely to belong to the same peak / noise)
     newSNoiseArray = cleanUpSNoiseArray(sNoiseArray)
-    console.log('newSNoiseArray');
-    console.log(newSNoiseArray);
-
     //draw the Shannon Energy graph, marking the S sounds that have been detected
     drawGraph(shannArr, 6, "Shannon Energy");
 }
@@ -377,8 +351,6 @@ function fastFourierTransform() {
     var fft = new dsp.FFT(4096, 200);
     fft.forward(newArr);
     var spectrum = fft.spectrum;
-    console.log("Fourier");
-    console.log(spectrum);
     drawGraph(spectrum, 3, "Fast Fourier Transform");
 }
 
@@ -424,11 +396,8 @@ function heartRateCalculation() {
 
     //now need to get rid of the values that belong to the same R peak but are not the maximum of that peak
     xyArraySpikes = getRidOfSamePeakPoints(arrayOfValuesGreaterThanThreshold, interval);
-    console.log('xyArray spikes');
-    console.log(xyArraySpikes);
     //beats per minute can now be calculated using the number of peaks in the 30 second period
     var bpm = calculateBPM(xyArraySpikes, xyArrayData[xyArrayData.length - 1].x);
-    console.log(bpm+'bpm');
     document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + Math.round(bpm) + "bpm";
 
 }
@@ -503,8 +472,6 @@ function getRidOfSamePeakPoints(arrayIn, intervalValue) {
     var tmpArray = [];
 
     for (var i = 0; i < arrayIn.length; ++i) {
-            //console.log(parseFloat(arrayIn[i+1].x))
-            //console.log(parseFloat((arrayIn[i].x + intervalValue)))
             if (i != arrayIn.length - 1 && parseFloat(arrayIn[i+1].x) == parseFloat((arrayIn[i].x + intervalValue).toFixed(3))) {
 
                     tmpArray.push(arrayIn[i]);
@@ -585,21 +552,10 @@ function ECGSignalProcessing(intervalValue) {
         //found qBeg
 
         //This is for logging the QRS complex in the console - useful for checking if the algorithm works
-        console.log("qBEG: " + currentQBeg.x);
-        console.log("sEND: " + currentSEnd.x);
-        console.log(Math.round(currentSEnd.x*1000 - currentQBeg.x*1000));
-
         qrsIntervalsSum += Math.round(currentSEnd.x*1000 - currentQBeg.x*1000);
     }
     var avgRRInterval = rrIntervalsSum / rrIntervalsArray.length;
     var rrIntervalsDiff = (Math.max(...rrIntervalsArray) - Math.min(...rrIntervalsArray))*1000;
-    console.log('rrIntervalsAvg');
-    console.log(avgRRInterval * 1000);
-    console.log('RR Max - Min:');
-    console.log(rrIntervalsDiff);
-    console.log('qrsComplexAvg');
-    console.log(qrsIntervalsSum / (xyArraySpikes.length - 2));
-
     document.getElementById("RRIntervalParagraph").innerHTML = "R-R interval: " + Math.round(avgRRInterval * 1000) + " ms";
     document.getElementById("HRV").innerHTML = "Heart Rate Variability (difference between max and min R-R): " + Math.round(rrIntervalsDiff) + " ms";
     document.getElementById("QRSComplexParagraph").innerHTML = "Q-R-S complex: " + Math.round(qrsIntervalsSum / (xyArraySpikes.length - 2)) + " ms";
@@ -668,8 +624,6 @@ function lowPassFilter(arrayIn) {
     }
     lpf.smoothing = 0.1; //this value provides best results
     lpfArray = lpf.smoothArray(lpfPreArrayData);
-    console.log("Low Pass");
-    console.log(lpfArray);
     return lpfArray;
 }
 

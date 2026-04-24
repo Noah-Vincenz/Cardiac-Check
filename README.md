@@ -4,6 +4,22 @@
 
 The system proposed in this project can be used for the remote monitoring of patients with heart failure. It also includes the analysis of the heart signals.
 
+## Tech Stack
+
+- **Mobile App**: Swift 3, Xcode, CocoaPods
+- **Web Portal**: HTML, CSS, JavaScript, npm, Browserify
+- **Backend**: Firebase Realtime Database, Firebase Storage, Firebase Auth
+- **Libraries**: CanvasJS (charting), Charts (iOS), dsp.js (FFT), lpf (low-pass filter), kalmanjs (Kalman filter)
+- **Testing**: Jasmine, XCTest
+
+## Firebase Setup
+
+This project requires your own Firebase project:
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+2. **Mobile app**: Download your own `GoogleService-Info.plist` from Firebase and place it in `mobileApp/`
+3. **Web portal**: Replace the placeholder config values in `webApp/public/index.html` with your Firebase project credentials
+4. Enable Email/Password authentication in the Firebase console
+
 ## Aims and Objectives
 
 The aim of this project is to design and implement a system for the remote monitoring of a patient that suffers from heart failure. This will simplify the way patients record heart measurements and check on their health, which will enable them to learn about their condition by looking at their statistics visualised in the user interface of the mobile application. The recordings will also be stored on a storage service in the back-end of the system, which will then be used to visualise the heart data on a web portal. This will allow clinicians to effectively analyse the recordings and directly message patients in case of emergency. The web portal will process the heart signals by applying different methods and algorithms to detect any cardiac abnormalities. Furthermore, healthcare institutions will be able to conduct valuable research from the data that has been supplied through the back-end, which can considerably reduce the number of heart failure cases in the future. This project, therefore, aims to solve a real-world problem by making a significant impact in the healthcare industry and thus potentially saving lives in the future.

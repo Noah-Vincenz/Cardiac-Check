@@ -1,1 +1,9 @@
-*.DS_Store
+.DS_Store
+mobileApp/Pods/
+mobileApp/Podfile.lock
+webApp/public/node_modules/
+webApp/public/bundle.js
+*.xcuserstate
+*.xcworkspacedata
+mobileApp/GoogleService-Info.plist
+.firebaserc

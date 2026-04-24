@@ -102,8 +102,6 @@ function heartRateCalculation() {
 
     //now need to get rid of the values that belong to the same R peak but are not the maximum of that peak
     xyArraySpikes = getRidOfSamePeakPoints(arrayOfValuesGreaterThanThreshold)
-    console.log('xyArray spikes');
-    console.log(xyArraySpikes);
     //beats per minute can now be calculated using the number of peaks in the 30 second period
     var bpm = calculateBPM(xyArraySpikes, xyArrayData[xyArrayData.length - 1].x)
     document.getElementById("heartRateParagraph").innerHTML = "Heart Rate: " + Math.round(bpm) + "bpm";

@@ -92,9 +92,8 @@ class RecordingsViewController: UIViewController {
     func retrieveChartData(reference: StorageReference) {
 
         reference.getData(maxSize: 1 * 1024 * 1024) { data, error in
-            if let myError = error?.localizedDescription {
-                print(myError) // gives more information
-                print("An error occured whilst trying do download the data for the chart.")
+            if error != nil {
+                return
             } else {
                 
                 let x = NSString(data: data!, encoding: String.Encoding.utf8.rawValue)! as String
@@ -343,15 +342,6 @@ class RecordingsViewController: UIViewController {
         }
     }
     
-    //THESE ARE FOR TESTING PURPOSES ONLY
-    func average(arr: [Double]) -> Double {
-        return arr.average
-    }
-    
-    func reduceWhitespaces(str: String) -> String {
-        return str.reduceWhitespaces()
-    }
-    //
 }
     
     
