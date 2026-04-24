@@ -35,24 +35,21 @@ class RecordingsViewControllerTests: XCTestCase {
     }
     
     func testAverage() {
-        let viewController = RecordingsViewController()
         let array1 = [1,4,5.5,6,8]
-        XCTAssertEqual(viewController.average(arr: array1), 4.9)
+        XCTAssertEqual(array1.average, 4.9)
         let array2 = [5,1,3,1.0,5]
-        XCTAssertEqual(viewController.average(arr: array2), 3)
+        XCTAssertEqual(array2.average, 3)
         let array3 = [4,5,9,11,57,22.6,7,4]
-        XCTAssertEqual(viewController.average(arr: array3), 14.95)
+        XCTAssertEqual(array3.average, 14.95)
     }
-    
+
     func testReduceWhitespaces() {
-        let viewController = RecordingsViewController()
         let str1 = "S    T s   f   sfd  d"
         let str2 = "  s"
         let str3 = "123 sdmdm 2   3 4    4"
-        XCTAssertEqual(viewController.reduceWhitespaces(str: str1), "S T s f sfd d")
-        XCTAssertEqual(viewController.reduceWhitespaces(str: str2), "s")
-        XCTAssertEqual(viewController.reduceWhitespaces(str: str3), "123 sdmdm 2 3 4 4")
-
+        XCTAssertEqual(str1.reduceWhitespaces(), "S T s f sfd d")
+        XCTAssertEqual(str2.reduceWhitespaces(), "s")
+        XCTAssertEqual(str3.reduceWhitespaces(), "123 sdmdm 2 3 4 4")
     }
     
     func testMessagesPerformance() {

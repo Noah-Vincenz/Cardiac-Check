@@ -132,12 +132,12 @@ function updateGraphs(patientKey) {
         xhr.onreadystatechange = function() {
             if (xhr.readyState === 4) {  // Makes sure the document is ready to parse.
                 if (xhr.status === 200) {  // Makes sure the file has been found.
-                    allText = xhr.responseText;
+                    var allText = xhr.responseText;
                     //This replaces multiple spaces in the text file by a single space character
                     var modifiedString = reduceWhitespaces(allText);
 
                     //now we can split the string by single whitespace
-                    words = modifiedString.split(" ");
+                    var words = modifiedString.split(" ");
 
                     var time = 0.000;
                     interval = parseFloat((parseFloat(words[6]) - parseFloat(words[3])).toFixed(3)); //detects the sampling rate of the recording
@@ -522,7 +522,7 @@ function ECGSignalProcessing(intervalValue) {
         rrIntervalsSum += newRRInterval;
         rrIntervalsArray.push(newRRInterval);
 
-        tmpTime = Math.round(xyArraySpikes[i].x / intervalValue); //currently time of spike
+        var tmpTime = Math.round(xyArraySpikes[i].x / intervalValue); //currently time of spike
         var currentSEnd = xyArrayData[tmpTime];
         while (xyArrayData[tmpTime+1].y <= currentSEnd.y) {
             currentSEnd = xyArrayData[tmpTime+1];
@@ -534,7 +534,6 @@ function ECGSignalProcessing(intervalValue) {
             currentSEnd = xyArrayData[tmpTime+1];
             tmpTime += 1;
         }
-        //console.log(currentSEnd)
         //found sEnd
 
         tmpTime = Math.round(xyArraySpikes[i].x / intervalValue); //currently time of spike

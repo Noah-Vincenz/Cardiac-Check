@@ -337,7 +337,6 @@ class RecordingsViewController: UIViewController {
             }
         //Catch the error, print an error message and return an empty array.
         } catch let error {
-            print("invalid regex: \(error.localizedDescription)")
             return []
         }
     }

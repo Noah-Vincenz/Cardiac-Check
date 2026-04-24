@@ -3,7 +3,9 @@ mobileApp/Pods/
 mobileApp/Podfile.lock
 webApp/public/node_modules/
 webApp/public/bundle.js
+webApp/public/bundle.js.tmp-*
 *.xcuserstate
 *.xcworkspacedata
+xcuserdata/
 mobileApp/GoogleService-Info.plist
 .firebaserc
